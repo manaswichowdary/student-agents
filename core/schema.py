@@ -59,9 +59,10 @@ class Listing:
         return ts + DAY - 1 if "T" not in self.deadline else ts   # a date means the end of that day
 
     def expires(self, found_at: float) -> float:
-        """TTL: free food lasts 2 hours, everything else until its deadline (or 14 days if none is given)."""
+        """TTL: free food lasts until the event starts (2 hours if no time is given); everything else until its
+        deadline (or 14 days if none is given)."""
         if self.type == "food":
-            return found_at + 2 * 3600
+            return self.deadline_ts() or found_at + 2 * 3600
         return self.deadline_ts() or found_at + 14 * DAY
 
 

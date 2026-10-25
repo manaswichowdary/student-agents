@@ -142,7 +142,7 @@ dialog.sheet .in { padding: 12px 20px calc(24px + env(safe-area-inset-bottom, 0p
   <aside class="side" aria-label="About">
     <div class="brand" id="sideBrand"></div>
     <h2>Your agent finds it. <span style="color: var(--link)">Your friends get it.</span></h2>
-    <p class="muted">Every ASU student gets a personal agent. Agents pass free food, paid studies, scholarships and hidden opportunities to friends they fit, only after both students say yes.</p>
+    <p class="muted">Every student gets a personal agent. Agents pass free food, paid studies, scholarships and hidden opportunities to friends they fit, only after both students say yes.</p>
     <div class="card"><b>Try it alone</b><span class="muted">Sign in, then tap "Add demo friends". Maya, Dev and Sam are demo agents: they accept requests, check links, share finds and join plans.</span></div>
     <p class="hint">Built for the Cubbie Hackathon, Track 2. <a href="/demo">See the 3 phone demo</a></p>
   </aside>
@@ -233,9 +233,9 @@ function signIn() {
     <h1 style="text-align: center; font-size: 36px">Your agent finds it.<br><span style="color: var(--link)">Your friends get it.</span></h1>
     <p class="muted" style="text-align: center; font-size: 17px">Nobody sees your schedule. Free food, paid studies and scholarships, shared only with friends you pick.</p>
     <form id="f" class="stack" style="margin-top: auto" novalidate>
-      <label class="lbl" for="email">ASU email</label>
-      <input class="input" id="email" type="email" autocomplete="email" placeholder="you@asu.edu" value="${esc(auth.email)}" required>
-      <p class="hint">Only @asu.edu emails. We'll send you a 6 digit code.</p>
+      <label class="lbl" for="email">School email (.edu)</label>
+      <input class="input" id="email" type="email" autocomplete="email" placeholder="you@school.edu" value="${esc(auth.email)}" required>
+      <p class="hint">Any .edu email. We'll send you a 6 digit code. ASU students also get free food from SunDevilCentral.</p>
       <p class="err" id="err" role="alert"></p>
       <button class="btn block" type="submit">Send code</button>
     </form></div>`;
@@ -304,7 +304,7 @@ function welcome() {
   const promise = (bg, icon, text) => `<li class="row" style="flex-wrap: nowrap; align-items: flex-start"><span style="flex: none; width: 34px; height: 34px; border: 2px solid var(--ink); border-radius: 12px; background: ${bg}; display: flex; align-items: center; justify-content: center">${icon}</span>${text}</li>`;
   app.innerHTML = `<div class="stack">
     <div class="row" style="flex-wrap: nowrap">${freebie("cheer", 96)}<div class="stack" style="gap: 6px">
-      <span class="chip ok">${I.check}${ME.self_reported ? "Email verified" : "ASU verified"}</span><h1>You're verified, ${esc(first(ME.name))}!</h1></div></div>
+      <span class="chip ok">${I.check}${ME.self_reported ? "School email verified" : "ASU verified"}</span><h1>You're verified, ${esc(first(ME.name))}!</h1></div></div>
     <section class="card" style="padding: 0; overflow: hidden"><div class="row" style="padding: 12px 18px; background: var(--blue-soft); border-bottom: 3px solid var(--ink); font-size: 14px">${ME.self_reported ? "" : I.lock}${src}</div>
       <div style="padding: 4px 18px 12px">${row("Name", ME.name)}${row("Major", ME.major)}${row("Year", ME.year[0].toUpperCase() + ME.year.slice(1), true)}</div></section>
     <p class="hint">${ME.self_reported ? "Your agent uses these to match finds to you." : "These come from ASU and can't be edited here. Your agent uses them to match finds to you."}</p>
@@ -331,7 +331,7 @@ function feedCard(it, i) {
     <div class="why">${I.spark}${esc(it.why)}</div>
     <div class="row between" style="margin-top: 4px"><button class="linkbtn" type="button" data-shared="${i}">What was shared</button>
       <a class="btn small ${it.urgent ? "" : "white"}" href="${esc(it.url)}" target="_blank" rel="noopener noreferrer">Open link</a></div>`;
-  return it.urgent ? `<article class="card urgent"><div class="band">${I.clock}Closes ${esc(it.closes)}</div><div class="inner">${body}</div></article>`
+  return it.urgent ? `<article class="card urgent"><div class="band">${I.clock}${it.type === "food" ? "Starts" : "Closes"} ${esc(it.closes)}</div><div class="inner">${body}</div></article>`
     : `<article class="card">${body}</article>`;
 }
 function feed() {
@@ -340,6 +340,7 @@ function feed() {
   const head = `<header class="stack" style="gap: 12px">
     <div class="row between"><div class="muted">Hi ${esc(first(ME.name))}</div><div class="status"><span class="dotgreen"></span>Agent on</div></div>
     <h1 style="font-size: 36px">For you</h1>
+    ${ME.can_scan && ME.feed.length ? `<div class="row between"><span class="hint">Your agent checks SunDevilCentral for free food every 30 min.</span><button class="btn small white" id="scan" type="button">Scan now</button></div>` : ""}
     ${ME.feed.length ? `<p class="muted">${ME.feed.length} find${ME.feed.length === 1 ? "" : "s"}${urgent ? ` · ${urgent} closing within a day` : ""}</p>
     <div class="tabs" role="group" aria-label="Filter">${FILTERS.map(([k, v]) => `<button type="button" data-f="${k}" aria-pressed="${filter === k}">${v}</button>`).join("")}</div>` : ""}
   </header>`;
@@ -352,6 +353,7 @@ function feed() {
       <h2 style="font-size: 28px">Nothing yet.<br>Your agent is looking.</h2>
       <p class="muted">Friends' agents send you finds once you connect. Want to see it work right away? Add the demo friends.</p>
       ${ME.has_demo_friends ? "" : `<button class="btn block" id="addDemo" type="button">Add demo friends (Maya, Dev, Sam)</button>`}
+      ${ME.can_scan ? `<button class="btn block white" type="button" id="scan">Scan SunDevilCentral for free food</button>` : ""}
       <button class="btn block white" type="button" id="toFriends">Add a real friend</button>
       <a href="#share">Share something you found</a></div>${demoBox ? `<div style="margin-top: 18px">${demoBox}</div>` : ""}`;
   } else {
@@ -361,6 +363,7 @@ function feed() {
   app.querySelectorAll("[data-shared]").forEach(b => b.onclick = () => sharedSheet(ME.feed[b.dataset.shared]));
   $("#addDemo") && ($("#addDemo").onclick = e => run(e.target, async () => { await api("/api/demo-friends", {}); await refresh(); toast("Maya, Dev and Sam accepted"); feed() }));
   $("#toFriends") && ($("#toFriends").onclick = () => go("friends"));
+  $("#scan") && ($("#scan").onclick = e => run(e.target, async () => { const r = await api("/api/scan", {}); await refresh(); toast(r.message); feed() }));
   $("#demoFind") && ($("#demoFind").onclick = e => run(e.target, async () => { const r = await api("/api/demo-find", {}); await refresh(); toast(r.result); feed() }));
 }
 function sharedSheet(it) {

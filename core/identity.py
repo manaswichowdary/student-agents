@@ -37,9 +37,9 @@ class Identity:
     def __init__(self, store: Store, clock: Clock, directory: dict[str, dict], open_signup: bool = False):
         self.store, self.clock, self.directory = store, clock, directory
         # open_signup: students outside the mock directory can join with a self reported profile.
-        # ALLOWED_DOMAINS limits which schools (default asu.edu).
+        # ALLOWED_DOMAINS can limit which schools, e.g. "asu.edu"; the default "*" means any .edu address.
         self.open_signup = open_signup
-        self.domains = {d.strip() for d in os.environ.get("ALLOWED_DOMAINS", "asu.edu").split(",") if d.strip()}
+        self.domains = {d.strip().lower() for d in os.environ.get("ALLOWED_DOMAINS", "*").split(",") if d.strip()}
         self.outbox: list[dict] = []      # mock email: the UI and demo read codes from here
 
     @classmethod
@@ -61,7 +61,7 @@ class Identity:
         if email not in self.directory:
             if not self.open_signup:
                 raise IdentityError("That ID isn't in the university directory")
-            if email.split("@", 1)[1] not in self.domains:
+            if "*" not in self.domains and email.split("@", 1)[1] not in self.domains:
                 raise IdentityError(f"Use your {' or '.join(sorted(self.domains))} email")
         code = f"{secrets.randbelow(1_000_000):06d}"
         self.store.x("INSERT OR REPLACE INTO codes VALUES (?,?,?,0)",

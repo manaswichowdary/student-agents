@@ -215,6 +215,12 @@ from live import router as live_router  # noqa: E402
 
 app.include_router(live_router)
 
+
+@app.on_event("startup")
+async def start_campus_scans():
+    from live import scan_everyone
+    asyncio.create_task(scan_everyone())
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)), proxy_headers=True,
                 forwarded_allow_ips="*")

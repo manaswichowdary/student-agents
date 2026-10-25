@@ -22,7 +22,7 @@ from core.mailer import email_enabled, send_code
 from core.schema import SchemaError, parse_listing
 from core.util import fmt_time
 from core.world import World
-from features import demo_friends
+from features import campus_feed, demo_friends
 from features import freebie_squad as squad
 from features import opportunity_relay as relay
 
@@ -143,6 +143,10 @@ async def auth_verify(b: Auth, request: Request, response: Response):
         except IdentityError as e:
             fail(e)
         start_session(response, request, email)
+        try:
+            await asyncio.wait_for(campus_feed.scan(w, email), timeout=15)
+        except Exception:  # noqa: BLE001  never block sign in on the feed
+            pass
         w.save()
     return {"ok": True}
 
@@ -170,7 +174,11 @@ def me(request: Request):
     for f in view["friends"]:
         f["demo"] = f["email"] in bots
     view["plans"] = sorted(view["plans"], key=lambda p: -p.get("starts", 0))
+    now = w.clock.now()
+    a.feed = [f for f in a.feed if f.get("closes_ts", now + 1) > now]      # drop events that already started
+    view["feed"] = sorted(a.feed, key=lambda f: f.get("closes_ts", 0))     # soonest first
     return {"signed_in": True, "email_mode": "email" if email_enabled() else "demo", "self_reported": bool(acc["self_reported"]),
+            "can_scan": campus_feed.eligible(user),
             "settings": a.settings, "has_demo_friends": any(w.connections.is_active(user, b) for b in bots),
             "now": fmt_time(w.clock.now()), "places": sorted(w.places), "suggested_event": demo_friends.suggested_event(w),
             **view}
@@ -288,6 +296,26 @@ async def add_demo_friends(request: Request):
 @router.post("/api/demo-find")
 async def demo_find(request: Request):
     return await act(request, lambda w, user: demo_friends.friend_shares_a_find(w, user))
+
+
+@router.post("/api/scan")
+async def scan_now(request: Request):
+    return await act(request, lambda w, user: campus_feed.scan(w, user))
+
+
+async def scan_everyone() -> None:
+    """Every 30 minutes each ASU student's agent checks the campus feed on its own."""
+    while True:
+        await asyncio.sleep(30 * 60)
+        try:
+            async with LOCK:
+                w = world()
+                for email in list(w.agents):
+                    if not demo_friends.is_bot(email) and campus_feed.eligible(email):
+                        await campus_feed.scan(w, email)
+                w.save()
+        except Exception as e:  # noqa: BLE001  keep the loop alive
+            print("campus scan failed:", e)
 
 
 @router.post("/api/share")

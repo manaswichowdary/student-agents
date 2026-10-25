@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from core.llm import llm
 from core.schema import Listing, SchemaError, parse_listing, scam_flags
-from core.util import DAY, fmt_day
+from core.util import DAY, fmt_day, fmt_time
 
 THRESHOLD = 0.5
 DAILY_CAP = 5
@@ -47,11 +47,13 @@ def surface(agent, listing: Listing, *, from_name: str | None, verified: bool, r
             msg_id: str | None = None, shared: dict | None = None) -> None:
     now = agent.world.clock.now()
     closes = listing.expires(now)
+    when = (f"starts {fmt_time(closes)}" if listing.type == "food" and listing.deadline else f"closes {fmt_day(closes)}")
     agent.feed.append({
         "id": listing.id, "kind": "opportunity", "title": listing.title, "org": listing.org, "type": listing.type,
-        "url": listing.url, "pay": listing.pay_amount, "closes": fmt_day(closes),
-        "line": (f"Forwarded by {from_name}, closes {fmt_day(closes)}" if from_name
-                 else f"Found by your agent, closes {fmt_day(closes)}"),
+        "url": listing.url, "pay": listing.pay_amount, "location": listing.location,
+        "closes": fmt_time(closes) if listing.type == "food" else fmt_day(closes), "closes_ts": closes,
+        "line": (f"Forwarded by {from_name}, {when}" if from_name
+                 else f"Found by your agent on {listing.source}, {when}"),
         "verified": verified, "why": reason, "fit_source": source, "urgent": closes - now < DAY,
         "msg_id": msg_id, "shared": shared or {},
     })
