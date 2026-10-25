@@ -160,7 +160,8 @@ async function api(path, body) {
 
 function showShared(title, fields, type) {
   $("dTitle").textContent = title;
-  $("dBody").innerHTML = `<p class="note">Exactly these fields crossed between the two agents:</p>
+  const blocked = fields && fields.blocked;
+  $("dBody").innerHTML = `<p class="note">${blocked ? "The bus blocked this message. Nothing crossed between the agents." : "Exactly these fields crossed between the two agents:"}</p>
     <pre>${esc(JSON.stringify(fields, null, 2))}</pre>
     ${NEVER[type] ? `<p class="note"><b>Never shared:</b> ${esc(NEVER[type])}.</p>` : ""}`;
   $("drawer").showModal();
