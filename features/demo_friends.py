@@ -58,6 +58,69 @@ def befriend(world, user: str, bot: str) -> None:
 def befriend_all(world, user: str) -> None:
     for bot in BOTS:
         befriend(world, user, bot)
+    seed_feed(world, user)
+
+
+def seed_feed(world, user: str) -> None:
+    """Pre-populate the student's feed with a mix of studies, scholarships and opportunities.
+
+    This gives the demo a realistic look from the moment friends are added, instead of
+    an empty feed that only fills when the student clicks a button.
+    """
+    from core.schema import parse_listing
+    from core.util import fmt_day, fmt_time, DAY
+
+    me = world.agent(user)
+    now = world.clock.now()
+    soon = phx(now + 22 * 3600).isoformat(timespec="minutes")
+    next_week = phx(now + 8 * 24 * 3600).date().isoformat()
+    two_weeks = phx(now + 15 * 24 * 3600).date().isoformat()
+
+    major = me.profile.get("major", "Computer Science")
+    items = [
+        {"id": "seed_study_1", "title": "Sleep and memory study, $30 for 45 min", "org": "ASU psychology lab",
+         "type": "study", "deadline": soon, "url": "https://psychology.asu.edu/research/sleep-memory-study",
+         "source": "Psych Dept Discord", "eligibility_tags": ["any major", "research"], "pay_amount": 30,
+         "location": "Tempe campus", "_from": "Maya"},
+        {"id": "seed_scholarship_1", "title": "Undergraduate conference travel grant, $750", "org": "Educational Outreach",
+         "type": "scholarship", "deadline": two_weeks, "url": "https://eoss.asu.edu/travel-grant",
+         "source": "ASU college pages", "eligibility_tags": ["any major"], "pay_amount": 750,
+         "location": "", "_from": "Dev"},
+        {"id": "seed_opportunity_1", "title": f"{major} grader position, spring semester", "org": "Fulton Schools",
+         "type": "opportunity", "deadline": next_week, "url": "https://engineering.asu.edu/jobs/cse-grader",
+         "source": "ASU college pages", "eligibility_tags": ["computer science"], "pay_amount": 17,
+         "location": "Tempe campus", "_from": "Dev"},
+        {"id": "seed_opportunity_2", "title": "McLEAPS county leadership internship, $6000", "org": "Watts College of Public Service",
+         "type": "opportunity", "deadline": next_week, "url": "https://publicservice.asu.edu/impact/mcleaps-internships",
+         "source": "ASU college pages", "eligibility_tags": ["any major", "junior", "senior", "graduate"], "pay_amount": 6000,
+         "location": "Maricopa County", "_from": "Maya"},
+        {"id": "seed_study_2", "title": "Grad school application fee waiver", "org": "Graduate College",
+         "type": "opportunity", "deadline": two_weeks, "url": "https://graduate.asu.edu/fee-waiver",
+         "source": "ASU college pages", "eligibility_tags": ["senior", "any major"], "pay_amount": None,
+         "location": "", "_from": "Sam"},
+    ]
+
+    for raw in items:
+        if raw["id"] in me.seen:
+            continue
+        from_name = raw.pop("_from")
+        try:
+            listing = parse_listing(raw)
+        except Exception:
+            continue
+        me.seen.add(listing.id)
+        closes = listing.expires(now)
+        when = f"closes {fmt_day(closes)}"
+        me.feed.append({
+            "id": listing.id, "kind": "opportunity", "title": listing.title, "org": listing.org,
+            "type": listing.type, "url": listing.url, "pay": listing.pay_amount, "location": listing.location,
+            "closes": fmt_day(closes), "closes_ts": closes,
+            "line": f"Forwarded by {from_name}, {when}",
+            "verified": True, "why": "matches your profile", "fit_source": "rules", "urgent": closes - now < DAY,
+            "msg_id": None, "shared": {},
+        })
+    if me.feed:
+        world.event("feed", f"{me.first}'s friends shared {len(me.feed)} finds")
 
 
 async def friend_shares_a_find(world, user: str) -> str:
