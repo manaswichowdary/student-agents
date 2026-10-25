@@ -52,7 +52,7 @@ def befriend(world, user: str, bot: str) -> None:
     c.accept(bot, user)
     c.set_perm(bot, user, "share_freebusy", True)
     c.set_perm(bot, user, "share_distance", True)
-    world.event("connection", f"{world.agent(bot).first} (demo friend) accepted {world.agent(user).first}'s request")
+    world.event("connection", f"{world.agent(bot).first} accepted {world.agent(user).first}'s request")
 
 
 def befriend_all(world, user: str) -> None:
@@ -77,19 +77,19 @@ async def friend_shares_a_find(world, user: str) -> str:
     week = phx(now + 9 * 24 * 3600).date().isoformat()
     picks = [
         {"title": f"Paid {me.profile['major']} research study, $25 for 30 min", "org": "ASU research lab", "type": "study",
-         "deadline": soon, "url": "https://psychology.asu.edu/research/sleep-memory-study", "source": "Psych Dept Discord",
+         "deadline": soon, "url": "https://psychology.asu.edu/research/undergraduate-research-opportunities", "source": "Psych Dept Discord",
          "eligibility_tags": [major[:30], "research"], "pay_amount": 25, "location": "Tempe campus"},
         {"title": f"{me.profile['major']} student leadership award", "org": "ASU college pages", "type": "scholarship",
-         "deadline": week, "url": "https://tuition.asu.edu/scholarships/nursing-leadership", "source": "ASU college pages",
+         "deadline": week, "url": "https://publicservice.asu.edu/impact/mcleaps-internships", "source": "ASU college pages",
          "eligibility_tags": [major[:30]], "pay_amount": 1500, "location": ""},
         {"title": f"Free lunch with {me.profile['major']} alumni", "org": "Career services", "type": "food",
-         "deadline": soon, "url": "https://sundevilcentral.eoss.asu.edu/event/hack-night", "source": "SunDevilCentral",
+         "deadline": soon, "url": "https://eoss.asu.edu/home", "source": "SunDevilCentral",
          "eligibility_tags": [major[:30]], "pay_amount": None, "location": "Memorial Union"},
     ]
     raw = random.choice(picks)
     raw["id"] = f"demo_{int(now)}_{random.randint(100, 999)}"
     bot.relay_times.clear()      # demo friends skip the 5 a day cap so visitors can try this more than once
-    world.event("relay", f"{bot.first}'s agent (demo friend) found \"{raw['title']}\"")
+    world.event("relay", f"{bot.first}'s agent found \"{raw['title']}\"")
     result = await relay.find(bot, raw)
     await relay.flush_digest(bot)       # demo friends send their digest right away
     return f"{bot.first}'s agent found \"{raw['title']}\": {result}"
@@ -115,7 +115,7 @@ def stage_conflict(world, event: dict) -> None:
     block = [phx(starts - 30 * 60).isoformat(timespec="minutes"), phx(starts + squad.LATE_BY).isoformat(timespec="minutes")]
     sam.settings["busy"] = [block]
     sam.profile["busy"] = [block]
-    world.event("squad", "Demo friend Sam has a class that runs 30 minutes into the event (staged to show a counter-proposal)")
+    world.event("squad", "Sam has a class that runs 30 minutes into the event")
 
 
 def suggested_event(world) -> dict:

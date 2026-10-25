@@ -64,6 +64,8 @@ WEB = {
     "https://psychology.asu.edu/research/dining-survey": {"status": 200, "login_wall": True, "timeout": False, "says_closed": False},
     "https://biology.asu.edu/labs/field-study": {"status": 0, "login_wall": False, "timeout": True, "says_closed": False},
     "https://psychology.asu.edu/research/free-textbooks": {"status": 200, "login_wall": False, "timeout": False, "says_closed": False},
+    "https://psychology.asu.edu/research/undergraduate-research-opportunities": {"status": 200, "login_wall": False, "timeout": False, "says_closed": False},
+    "https://eoss.asu.edu/home": {"status": 200, "login_wall": False, "timeout": False, "says_closed": False},
 }
 
 LISTINGS = {

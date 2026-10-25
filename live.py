@@ -98,7 +98,7 @@ async def auth_start(b: Auth, request: Request):
     if len(q) >= 10:
         raise HTTPException(429, "Too many codes from this network. Try again in an hour.")
     if demo_friends.is_bot(normalize(b.email)):
-        raise HTTPException(400, "That's one of the demo friends. Sign in with your own ASU email.")
+        raise HTTPException(400, "That's one of the built-in friends. Sign in with your own .edu email.")
     async with LOCK:
         w = world()
         try:

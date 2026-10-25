@@ -63,7 +63,7 @@ class Identity:
         from data.seed import DEMO_ACCOUNTS
         email = normalize(email)
         if not EDU.match(email):
-            raise IdentityError("Use your school .edu email, like asurite@asu.edu")
+            raise IdentityError("Use your school .edu email")
         if email not in self.directory:
             if not self.open_signup:
                 raise IdentityError("That ID isn't in the university directory")
