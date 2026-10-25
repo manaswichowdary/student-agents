@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*.db
+*.db-journal
+data/llm_misses.json
+.pytest_cache/
