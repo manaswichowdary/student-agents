@@ -111,6 +111,8 @@ async def auth_start(b: Auth, request: Request):
             emailed = send_code(email, code)
         except RuntimeError as e:
             fail(e, 502)
+        if not emailed:      # demo mode: the code goes on screen, so this sign in doesn't prove who owns the inbox
+            w.identity.mark_shown_on_screen(email)
     return {"email": email, "emailed": emailed, "demo_code": None if emailed else code,
             "in_directory": w.identity.in_directory(email)}
 
@@ -178,6 +180,7 @@ def me(request: Request):
     a.feed = [f for f in a.feed if f.get("closes_ts", now + 1) > now]      # drop events that already started
     view["feed"] = sorted(a.feed, key=lambda f: f.get("closes_ts", 0))     # soonest first
     return {"signed_in": True, "email_mode": "email" if email_enabled() else "demo", "self_reported": bool(acc["self_reported"]),
+            "unverified": acc.get("proof") == "screen",
             "can_scan": campus_feed.eligible(user),
             "settings": a.settings, "has_demo_friends": any(w.connections.is_active(user, b) for b in bots),
             "now": fmt_time(w.clock.now()), "places": sorted(w.places), "suggested_event": demo_friends.suggested_event(w),
@@ -338,9 +341,12 @@ async def squad_start(b: Act, request: Request):
             raise ValueError("Add the event name and start time")
         event = {"title": b.title.strip()[:120], "location": b.location or "Memorial Union", "starts": b.starts,
                  "minutes": 90, "capacity": max(2, min(b.capacity, 12))}
+        if w.connections.is_active(user, demo_friends.BOTS[2]):
+            demo_friends.stage_conflict(w, event)
         plan = await squad.start(w.agent(user), event)
         await demo_friends.answer_invites(w, plan)
-        return {"plan": plan["id"], "invited": len(plan["invited"]), "transport": plan["transport"]}
+        return {"plan": plan["id"], "invited": len(plan["invited"]), "transport": plan["transport"],
+                "later": len(plan["late"])}
     return await act(request, go)
 
 

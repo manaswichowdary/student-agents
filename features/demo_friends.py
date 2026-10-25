@@ -8,7 +8,7 @@ from __future__ import annotations
 import random
 from datetime import timedelta
 
-from core.util import phx
+from core.util import parse_local, phx
 from data import seed
 
 from . import freebie_squad as squad
@@ -100,6 +100,22 @@ async def answer_invites(world, plan: dict) -> None:
     for member in plan["invited"]:
         if is_bot(member):
             await squad.answer(world.agent(member), plan["id"], True)
+
+
+def stage_conflict(world, event: dict) -> None:
+    """Make demo friend Sam busy for the first 30 minutes of the student's event, so the counter-proposal shows.
+
+    Staged on purpose and logged as such: a lone visitor has friends with empty calendars, which would never
+    show how Freebie Squad handles a conflict.
+    """
+    if int(event.get("minutes", 60)) < squad.MIN_EVENT_FOR_COUNTER:
+        return
+    sam = world.agent(BOTS[2])
+    starts = parse_local(event["starts"])
+    block = [phx(starts - 30 * 60).isoformat(timespec="minutes"), phx(starts + squad.LATE_BY).isoformat(timespec="minutes")]
+    sam.settings["busy"] = [block]
+    sam.profile["busy"] = [block]
+    world.event("squad", "Demo friend Sam has a class that runs 30 minutes into the event (staged to show a counter-proposal)")
 
 
 def suggested_event(world) -> dict:

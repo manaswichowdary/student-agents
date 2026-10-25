@@ -3,6 +3,11 @@
 Availability replies hold only free or busy for that one window (rounded to 15 minutes) and a distance bucket,
 and only from connections who turned on free/busy sharing. Plans move proposed -> confirmed -> expired or
 cancelled. Exact pickup spots are sent only to confirmed members, after they confirm.
+
+Conflicts: if a friend is busy when the event starts and the event runs at least an hour, the host's agent makes one
+counter-proposal. It asks only the busy friends about a later window (the event's remaining time after 30 minutes).
+A friend who is free then is invited to arrive late, on their own, and their human still has to say yes. The
+extra question is one more free/busy query, so it counts against the same 3 an hour per friend limit.
 """
 from __future__ import annotations
 
@@ -11,6 +16,9 @@ import secrets
 from core.util import fmt_time, parse_local, phx, round_15
 
 MILES = {"near": 1, "medium": 5}
+LATE_BY = 30 * 60            # a counter-proposal asks about the time after the first 30 minutes
+MIN_LATE_WINDOW = 30 * 60    # and only if the event still has at least this much left
+MIN_EVENT_FOR_COUNTER = 60   # minutes
 
 
 def bucket(miles: float) -> str:
@@ -29,38 +37,65 @@ def distance_to(agent, place: str) -> str:
     return bucket(miles)
 
 
+def late_window(starts: float, minutes: int) -> tuple[float, float] | None:
+    """The counter-proposal window, or None when the event is too short to arrive late."""
+    if minutes < MIN_EVENT_FOR_COUNTER:
+        return None
+    late_start = round_15(starts + LATE_BY, up=True)
+    late_end = round_15(starts + minutes * 60, up=True)
+    return (late_start, late_end) if late_end - late_start >= MIN_LATE_WINDOW else None
+
+
+async def ask(agent, friends: list[str], event: dict, w_start: float, w_end: float) -> str:
+    qid = "q_" + secrets.token_hex(4)
+    agent.queries[qid] = {"replies": {}}
+    for f in friends:
+        await agent.send("AVAILABILITY_QUERY", f, {
+            "query_id": qid, "event_title": event["title"], "place": event["location"],
+            "window_start": phx(w_start).isoformat(timespec="minutes"),
+            "window_end": phx(w_end).isoformat(timespec="minutes")})
+    return qid
+
+
 async def start(agent, event: dict) -> dict:
     """event: {title, location, starts (iso), minutes, capacity}"""
     world = agent.world
     starts = parse_local(event["starts"])
     w_start, w_end = round_15(starts), round_15(starts + event.get("minutes", 60) * 60, up=True)
-    qid = "q_" + secrets.token_hex(4)
-    agent.queries[qid] = {"replies": {}}
     asked = [f for f in world.connections.active(agent.id) if world.connections.perm(f, agent.id, "share_freebusy")]
     world.event("squad", f"{agent.first}'s agent asks {len(asked)} connection(s): free for {event['title']}?")
-    for f in asked:
-        await agent.send("AVAILABILITY_QUERY", f, {
-            "query_id": qid, "event_title": event["title"], "place": event["location"],
-            "window_start": phx(w_start).isoformat(timespec="minutes"),
-            "window_end": phx(w_end).isoformat(timespec="minutes")})
+    qid = await ask(agent, asked, event, w_start, w_end)
     replies = agent.queries[qid]["replies"]
     free = [f for f, r in replies.items() if r["status"] == "free"]
+    busy = [f for f, r in replies.items() if r["status"] == "busy"]
     order = {"far": 0, "medium": 1, "near": 2, None: 3}
     free.sort(key=lambda f: order[replies[f]["distance"]])    # farthest friends get the car seats first
     capacity = max(0, int(event.get("capacity", 4)) - 1)
     free = free[:capacity]
+    late: dict[str, float] = {}            # friend -> when they'd arrive, for the counter-proposal
+    counter = late_window(starts, int(event.get("minutes", 60)))
+    if busy and counter and len(free) < capacity:
+        world.event("squad", f"{len(busy)} friend(s) are busy at the start. {agent.first}'s agent counter-proposes "
+                             f"a later arrival ({fmt_time(counter[0])}) to just those friends")
+        cq = await ask(agent, busy, event, *counter)
+        for f, r in agent.queries[cq]["replies"].items():
+            if r["status"] == "free" and len(free) + len(late) < capacity:
+                late[f] = counter[0]
     seats = agent.profile.get("seats", 0) if agent.profile.get("has_car") else 0
     transport = "carpool" if seats > 0 and free else "walk"
     roles = {f: ("rider" if transport == "carpool" and i < seats else "walker") for i, f in enumerate(free)}
+    roles.update({f: "walker" for f in late})          # late arrivals make their own way
     plan = {"id": "p_" + secrets.token_hex(4), "title": event["title"], "location": event["location"],
             "starts": starts, "starts_label": fmt_time(starts), "state": "proposed", "host": agent.id,
             "host_name": agent.first, "transport": transport, "capacity": capacity, "invited": roles,
-            "accepted": [], "declined": [], "role": "driver" if transport == "carpool" else "walker"}
+            "accepted": [], "declined": [], "role": "driver" if transport == "carpool" else "walker",
+            "late": late, "late_labels": {f: fmt_time(t) for f, t in late.items()}}
     agent.plans[plan["id"]] = plan
     for f, role in roles.items():
         await agent.send("PLAN_INVITE", f, {"plan_id": plan["id"], "event_title": event["title"],
-                                            "starts": phx(starts).isoformat(timespec="minutes"),
-                                            "transport": transport, "role": role})
+                                            "starts": phx(late.get(f, starts)).isoformat(timespec="minutes"),
+                                            "transport": "walk" if f in late else transport, "role": role,
+                                            "later": f in late})
     if not free:
         agent.note(f"Nobody's free for {event['title']} right now")
     return plan
@@ -90,7 +125,7 @@ async def on_invite(agent, msg) -> None:
                                    "host_name": host.first, "starts_label": fmt_time(parse_local(p["starts"])),
                                    "starts": parse_local(p["starts"]), "transport": p["transport"],
                                    "role": p["role"], "state": "invited", "meet": None, "msg_id": msg.id,
-                                   "shared": p}
+                                   "later": p["later"], "shared": p}
 
 
 async def answer(agent, plan_id: str, accept: bool) -> tuple[bool, str]:
@@ -112,8 +147,9 @@ async def on_plan_reply(agent, msg) -> None:
     if msg.sender in plan["accepted"]:
         return
     now = agent.world.clock.now()
+    arrives = plan.get("late", {}).get(msg.sender, plan["starts"])     # late arrivals can answer until their own time
     why = ("the plan was cancelled" if plan["state"] == "cancelled"
-           else "the event already started" if now > plan["starts"] or plan["state"] == "expired"
+           else "the event already started" if now > arrives or plan["state"] == "expired"
            else "the plan is full" if not _has_room(plan) else None)
     if why:
         await agent.send("PLAN_UPDATE", msg.sender, {"plan_id": plan["id"], "state": "rejected",
@@ -157,7 +193,9 @@ async def on_update(agent, msg) -> None:
 
 async def _send_confirmed(agent, plan: dict, member: str) -> None:
     friend = agent.world.agents[member]
-    if plan["invited"][member] == "rider":
+    if member in plan.get("late", {}):
+        meet = f"Meet at {plan['location']}, front entrance, {fmt_time(plan['late'][member] - 10 * 60)}"
+    elif plan["invited"][member] == "rider":
         spot = agent.world.pickup_spots.get(friend.profile.get("zone", ""), "the main entrance")
         meet = f"{agent.first} picks you up at {spot}, {fmt_time(plan['starts'] - 20 * 60)}"
     else:

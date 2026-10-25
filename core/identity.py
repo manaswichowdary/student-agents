@@ -41,6 +41,7 @@ class Identity:
         self.open_signup = open_signup
         self.domains = {d.strip().lower() for d in os.environ.get("ALLOWED_DOMAINS", "*").split(",") if d.strip()}
         self.outbox: list[dict] = []      # mock email: the UI and demo read codes from here
+        self.screen_shown: set[str] = set()   # emails whose code was shown on screen, not sent to their inbox
 
     @classmethod
     def from_file(cls, store: Store, clock: Clock, path: Path, open_signup: bool = False) -> "Identity":
@@ -52,6 +53,10 @@ class Identity:
     @staticmethod
     def _hash(email: str, code: str) -> str:
         return hashlib.sha256(f"{email}:{code}".encode()).hexdigest()
+
+    def mark_shown_on_screen(self, email: str) -> None:
+        """The server showed this code on screen (no email key). Whoever signs in is not proven to own the inbox."""
+        self.screen_shown.add(normalize(email))
 
     def start(self, email: str) -> str:
         """Begin sign up. Only .edu addresses in the directory can ever verify."""
@@ -85,8 +90,11 @@ class Identity:
             person, self_reported = self.directory[email], 0
         else:
             person, self_reported = self._self_reported(name, major, year), 1
-        self.store.x("INSERT OR REPLACE INTO accounts VALUES (?,?,?,?,?,?)",
-                     (email, person["name"], person["major"], person["year"], self.clock.now(), self_reported))
+        proof = "screen" if email in self.screen_shown else "email"
+        self.screen_shown.discard(email)
+        self.store.x("INSERT OR REPLACE INTO accounts (email,name,major,year,verified_at,self_reported,proof) "
+                     "VALUES (?,?,?,?,?,?,?)",
+                     (email, person["name"], person["major"], person["year"], self.clock.now(), self_reported, proof))
         self.store.x("DELETE FROM codes WHERE email=?", (email,))
         return self.account(email)
 
