@@ -648,10 +648,8 @@ async function sources() {
 const SIDE = [["feed", "For you"], ["friends", "Friends"], ["share", "Share a find"], ["squad", "Freebie Squad"], ["agent", "My agent"], ["sources", "Source trust"]];
 function accountSheet() {
   sheet(`<div class="row" style="gap: 12px; flex-wrap: nowrap"><span class="avatar" style="width: 52px; height: 52px">${esc(initials(ME.name))}</span><div><h2>${esc(ME.name)}</h2><p class="muted">${esc(ME.major)} · ${esc(ME.year)}</p></div></div>
-    <button class="btn block white" id="goHome" type="button">Back to home page</button>
     <button class="btn block danger" id="signOut" type="button">Sign out</button>
     <button class="btn block white" data-close type="button">Cancel</button>`);
-  $("#goHome").onclick = () => { $("#sheet").close(); ME = null; auth = { email: "", code: "" }; location.hash = ""; render() };
   $("#signOut").onclick = () => run($("#signOut"), async () => { await api("/api/auth/logout", {}); ME = null; auth = { email: "", code: "" }; $("#sheet").close(); location.hash = ""; render() });
 }
 const SIDE_ICON = { sources: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>' };
@@ -665,8 +663,7 @@ function chrome(on) {
   const svg = k => `<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">${icon(k)}</svg>`;
   $("#tabbar").innerHTML = NAV.map(([k, label]) => `<a href="#${k}" ${r === k || (r === "sources" && k === "agent") ? 'aria-current="page"' : ""}><span>${svg(k)}</span>${label}</a>`).join("");
   $("#sidenav").innerHTML = SIDE.map(([k, label]) => `<a href="#${k}" ${r === k ? 'aria-current="page"' : ""}>${svg(k)}${label}</a>`).join("")
-    + `<div style="flex: 1"></div><button class="linkbtn" id="sideSignOut" type="button" style="padding: 10px 14px; font-size: 14px; text-align: left">Sign out</button>`;
-  $("#sideSignOut") && ($("#sideSignOut").onclick = () => run($("#sideSignOut"), async () => { await api("/api/auth/logout", {}); ME = null; auth = { email: "", code: "" }; location.hash = ""; render() }));
+;
   $("#topbar").innerHTML = `<div class="in"><div class="row" style="gap: 10px; flex-wrap: nowrap"><span class="logo">${I.radar}</span><div class="brand" style="font-size: 22px">Student Agents<small>by Freebie Radar</small></div>
       <span class="muted" style="margin-left: 18px; font-size: 15px">Your agent finds it. Your friends get it. Nobody sees your schedule.</span></div>
     <div class="row" style="gap: 14px; flex-wrap: nowrap"><div class="status"><span class="dotgreen"></span>Agent on</div>
