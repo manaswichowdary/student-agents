@@ -162,7 +162,7 @@ PAYLOADS: dict[str, dict] = {
     "AVAILABILITY_REPLY": {"query_id": _text(40), "status": _one_of("free", "busy"),
                            "distance": _one_of("near", "medium", "far", None)},
     "PLAN_INVITE": {"plan_id": _text(40), "event_title": _text(), "starts": _iso, "transport": _one_of("carpool", "walk"),
-                    "role": _one_of("driver", "rider", "walker")},
+                    "role": _one_of("driver", "rider", "walker"), "later": lambda v: isinstance(v, bool)},
     "PLAN_REPLY": {"plan_id": _text(40), "answer": _one_of("accept", "decline")},
     "PLAN_UPDATE": {"plan_id": _text(40), "state": _one_of("confirmed", "rejected", "cancelled", "expired"),
                     "note": _text(200), "meet": lambda v: v is None or _text(120)(v)},
