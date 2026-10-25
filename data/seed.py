@@ -7,6 +7,11 @@ from core.util import DAY, WEEK, parse_local
 
 DEMO_START = parse_local("2026-10-26T10:00")       # Monday 10:00 am, Phoenix time
 
+# Accounts with a fixed demo code — skip the random OTP so testers can sign in instantly.
+DEMO_ACCOUNTS = {
+    "mmakkena@asu.edu": "123456",
+}
+
 PHONES = ["mpatel21@asu.edu", "drao7@asu.edu", "skim14@asu.edu"]       # Maya, Dev, Sam
 BACKGROUND = ["pnair3@asu.edu", "jlee88@asu.edu"]                      # Priya, Jordan: verified at start
 

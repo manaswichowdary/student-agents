@@ -145,6 +145,10 @@ async def auth_verify(b: Auth, request: Request, response: Response):
         except IdentityError as e:
             fail(e)
         start_session(response, request, email)
+        # Auto-add demo friends for demo accounts so testers land on a ready profile
+        from data.seed import DEMO_ACCOUNTS
+        if email in DEMO_ACCOUNTS:
+            demo_friends.befriend_all(w, email)
         try:
             await asyncio.wait_for(campus_feed.scan(w, email), timeout=15)
         except Exception:  # noqa: BLE001  never block sign in on the feed
