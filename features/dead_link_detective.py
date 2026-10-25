@@ -7,11 +7,12 @@ Source trust = (confirmed + 1) / (total + 2), with older checks decaying 0.95 pe
 """
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import os
 import secrets
-import urllib.request
 
+from core import netguard
 from core.llm import llm
 from core.schema import Listing, parse_listing
 from core.util import WEEK
@@ -61,17 +62,16 @@ class TrustBook:
 
 # ------------------------------------------------------------------------------------------- checking a link
 def check_url(world, verifier: str, url: str) -> dict:
-    """Mock web by default. REAL_HTTP=1 does a real GET with a 5 second timeout."""
+    """Mock web by default. REAL_HTTP=1 does a real GET (5 second timeout) through core/netguard.py, which only
+    reaches public https addresses."""
     if world.shared_fetch and url in world.fetch_cache:
         return world.fetch_cache[url]                 # same underlying check: counts once
     if url not in world.web and os.environ.get("REAL_HTTP") == "1":
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": "student-agents/0.1"})
-            with urllib.request.urlopen(req, timeout=5) as r:
-                body = r.read(20000).decode("utf-8", "replace").lower()
-                page = {"status": r.status, "login_wall": "sign in" in body and "password" in body,
-                        "timeout": False, "says_closed": any(w in body for w in ("no longer accepting", "applications are closed", "this study is full"))}
-        except Exception as e:
+            status, body = netguard.fetch(url)
+            page = {"status": status, "login_wall": "sign in" in body and "password" in body,
+                    "timeout": False, "says_closed": any(w in body for w in ("no longer accepting", "applications are closed", "this study is full"))}
+        except Exception as e:      # noqa: BLE001  blocked addresses and network errors both mean "can't confirm"
             page = {"status": getattr(e, "code", 0) or 0, "login_wall": False, "timeout": "timed out" in str(e),
                     "says_closed": False}
     else:
@@ -120,7 +120,10 @@ async def on_verify_request(agent, msg) -> None:
     if listing.id in agent.my_finds:            # never vote on your own owner's finds
         status, reason, http, check_id = "unknown", "recused: this is my owner's own find", "not checked", "recused"
     else:
-        page = check_url(world, agent.id, listing.url)
+        if listing.url not in world.web and os.environ.get("REAL_HTTP") == "1":
+            page = await asyncio.to_thread(check_url, world, agent.id, listing.url)   # a slow site must not freeze the server
+        else:
+            page = check_url(world, agent.id, listing.url)
         http, check_id = describe(page), page["check_id"]
         forced = hard_rules(listing, page, now)
         evidence = {"http": http, "deadline": listing.deadline or "none listed",

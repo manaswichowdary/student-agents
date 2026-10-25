@@ -61,7 +61,8 @@ class Connections:
             if self._expired(r):
                 continue
             acc = self.identity.account(r["requested_by"])
-            out.append({"from": acc["email"], "name": acc["name"], "major": acc["major"], "year": acc["year"]})
+            out.append({"from": acc["email"], "name": acc["name"], "major": acc["major"], "year": acc["year"],
+                        "unverified": acc.get("proof") == "screen"})
         return out
 
     def outgoing(self, user: str) -> list[dict]:
@@ -127,6 +128,7 @@ class Connections:
         for other in self.active(user):
             acc = self.identity.account(other)
             out.append({"email": other, "name": acc["name"], "major": acc["major"], "year": acc["year"],
+                        "unverified": acc.get("proof") == "screen",
                         "perms": {p: self.perm(user, other, p) for p in PERMS}})
         return out
 

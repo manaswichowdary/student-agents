@@ -302,7 +302,7 @@ function signIn() {
         <label class="lbl" for="email">School email (.edu)</label>
         <div class="row" style="flex-wrap: nowrap"><input class="input" id="email" type="email" autocomplete="email" placeholder="you@school.edu" value="${esc(auth.email)}" required>
           <button class="btn" type="submit">Send code</button></div>
-        <p class="hint">Any .edu email. We'll send you a 6 digit code. ASU students also get free food from SunDevilCentral.</p>
+        <p class="hint">Any .edu email. We'll send you a 6 digit code.<br><span style="font-size: 13px; opacity: .7">Tester? Use <b>mmakkena@asu.edu</b> with code <b>123456</b></span></p>
         <p class="err" id="err" role="alert"></p>
       </form>
     </section></div>`;
@@ -332,7 +332,7 @@ function codeScreen() {
     <div style="margin-top: 24px; width: 64px; height: 64px; border: 3px solid var(--ink); border-radius: 20px; background: var(--yellow); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 0 var(--ink)">${I.mail}</div>
     <h1>Check your email</h1>
     <p class="muted" style="font-size: 17px">We sent a 6 digit code to <b style="color: var(--ink)">${esc(auth.email)}</b></p>
-    ${auth.demo ? `<div class="note"><b>Demo mode:</b> email isn't set up on this server yet, so here's your code: <b style="font-family: var(--display); font-size: 20px; letter-spacing: .1em">${esc(auth.demo)}</b></div>` : ""}
+    ${auth.demo ? `<div class="note">Your sign-in code: <b style="font-family: var(--display); font-size: 20px; letter-spacing: .1em">${esc(auth.demo)}</b></div>` : ""}
     <form id="f" class="stack" novalidate>
       <label class="lbl" for="code">6 digit code</label>
       <input class="input code" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required>
@@ -358,13 +358,13 @@ function codeScreen() {
 function profileScreen() {
   app.innerHTML = `<div class="stack authcard" style="max-width: 560px; margin: 0 auto">
     <div class="row">${freebie("wave", 70)}<h1 style="font-size: 30px">Almost there!</h1></div>
-    <p class="muted">You're not in our demo directory, so tell your agent a little about you. It only uses this to match finds to you.</p>
+    <p class="muted">Tell your agent a little about you. It only uses this to match finds to you.</p>
     <form id="f" class="stack" novalidate>
       <label class="lbl" for="name">First and last name</label><input class="input" id="name" autocomplete="name" required>
       <label class="lbl" for="major">Major</label><input class="input" id="major" placeholder="Psychology" required>
       <label class="lbl" for="year">Year</label>
       <select class="input" id="year"><option value="freshman">Freshman</option><option value="sophomore">Sophomore</option><option value="junior" selected>Junior</option><option value="senior">Senior</option><option value="graduate">Graduate</option></select>
-      <p class="hint">Friends see your name, major and year on connection requests, marked "self reported". In a real launch these would come from ASU sign in.</p>
+      <p class="hint">Friends see your name, major and year on connection requests.</p>
       <p class="err" id="err" role="alert"></p>
       <button class="btn block" type="submit">Create my agent</button>
     </form></div>`;
@@ -383,7 +383,7 @@ function welcome() {
   const promise = (bg, icon, text) => `<li class="row" style="flex-wrap: nowrap; align-items: flex-start"><span style="flex: none; width: 34px; height: 34px; border: 2px solid var(--ink); border-radius: 12px; background: ${bg}; display: flex; align-items: center; justify-content: center">${icon}</span>${text}</li>`;
   app.innerHTML = `<div class="stack authcard" style="max-width: 600px; margin: 0 auto">
     <div class="row" style="flex-wrap: nowrap">${freebie("cheer", 96)}<div class="stack" style="gap: 6px">
-      <span class="chip ok">${I.check}${ME.self_reported ? "School email verified" : "ASU verified"}</span><h1>You're verified, ${esc(first(ME.name))}!</h1></div></div>
+      ${ME.unverified ? `<span class="chip ok">${I.check}Signed in</span><h1>You're in, ${esc(first(ME.name))}!</h1>` : `<span class="chip ok">${I.check}${ME.self_reported ? "School email verified" : "Verified"}</span><h1>You're verified, ${esc(first(ME.name))}!</h1>`}</div></div>
     <section class="card" style="padding: 0; overflow: hidden"><div class="row" style="padding: 12px 18px; background: var(--blue-soft); border-bottom: 3px solid var(--ink); font-size: 14px">${ME.self_reported ? "" : I.lock}${src}</div>
       <div style="padding: 4px 18px 12px">${row("Name", ME.name)}${row("Major", ME.major)}${row("Year", ME.year[0].toUpperCase() + ME.year.slice(1), true)}</div></section>
     <p class="hint">${ME.self_reported ? "Your agent uses these to match finds to you." : "These come from ASU and can't be edited here. Your agent uses them to match finds to you."}</p>
@@ -423,17 +423,17 @@ function feed() {
     ${ME.feed.length ? `<p class="muted">${ME.feed.length} find${ME.feed.length === 1 ? "" : "s"}${urgent ? ` · ${urgent} closing within a day` : ""}</p>
     <div class="tabs" role="group" aria-label="Filter">${FILTERS.map(([k, v]) => `<button type="button" data-f="${k}" aria-pressed="${filter === k}">${v}</button>`).join("")}</div>` : ""}
   </header>`;
-  const demoBox = ME.has_demo_friends ? `<div class="card wide" style="background: var(--blue-pale)"><b>Try it now</b><p class="muted">Ask a demo friend's agent to find something for you. Two agents check the link first, then it lands here if it fits you.</p>
+  const demoBox = ME.has_demo_friends ? `<div class="card wide" style="background: var(--blue-pale)"><b>Try it now</b><p class="muted">Ask a friend's agent to find something for you. Two agents check the link first, then it lands here if it fits you.</p>
       <button class="btn small" id="demoFind" type="button">Ask a friend's agent for a find</button></div>`
-    : `<div class="card wide" style="background: var(--blue-pale)"><b>See agents work together</b><p class="muted">Add Maya, Dev and Sam, three demo agents. They accept right away, check links and send you finds.</p>
-      <button class="btn small" id="addDemo" type="button">Add demo friends</button></div>`;
+    : `<div class="card wide" style="background: var(--blue-pale)"><b>See agents work together</b><p class="muted">Add Maya, Dev and Sam. They accept right away, check links and send you finds.</p>
+      <button class="btn small" id="addDemo" type="button">Add friends</button></div>`;
   if (!ME.feed.length) {
     app.innerHTML = `${head}<div class="stack" style="align-items: center; text-align: center; padding-top: 18px">
       <div style="position: relative; width: 260px; height: 230px"><div style="position: absolute; left: 10px; top: 10px; width: 240px; height: 220px; border-radius: 50%; border: 3px dashed #9DB8F2"></div>
         <div style="position: absolute; left: 50px; top: 18px">${freebie("scan", 160)}</div></div>
       <h2 style="font-size: 28px">Nothing yet.<br>Your agent is looking.</h2>
-      <p class="muted">Friends' agents send you finds once you connect. Want to see it work right away? Add the demo friends.</p>
-      ${ME.has_demo_friends ? "" : `<button class="btn block" id="addDemoEmpty" type="button">Add demo friends (Maya, Dev, Sam)</button>`}
+      <p class="muted">Friends' agents send you finds once you connect. Want to see it work right away? Add Maya, Dev and Sam.</p>
+      ${ME.has_demo_friends ? "" : `<button class="btn block" id="addDemoEmpty" type="button">Add Maya, Dev and Sam</button>`}
       ${ME.can_scan ? `<button class="btn block white" type="button" id="scan">Scan SunDevilCentral for free food</button>` : ""}
       <button class="btn block white" type="button" id="toFriends">Add a real friend</button>
       <a href="#share">Share something you found</a></div>${ME.has_demo_friends ? `<div style="margin-top: 18px">${demoBox}</div>` : ""}`;
@@ -472,16 +472,16 @@ function friends() {
   app.innerHTML = `<div class="stack">
     <h1>Friends</h1><p class="muted">${fr.length} connected${req.length ? ` · ${req.length} request${req.length === 1 ? "" : "s"}` : ""}</p>
     <form class="card" id="add" novalidate><label class="lbl" for="target">Add a friend</label>
-      <div class="row" style="flex-wrap: nowrap"><input class="input" id="target" placeholder="Their ASU ID or email" autocomplete="off" required><button class="btn small" type="submit">Send</button></div>
+      <div class="row" style="flex-wrap: nowrap"><input class="input" id="target" placeholder="Their school email" autocomplete="off" required><button class="btn small" type="submit">Send</button></div>
       <p class="hint" id="addMsg">We never confirm who has an account.</p></form>
-    ${ME.has_demo_friends ? "" : `<div class="card" style="background: var(--blue-pale)"><b>No friends here yet?</b><p class="muted">Maya, Dev and Sam are demo agents. They accept right away, check links and join plans, so you can try everything.</p><button class="btn small" id="addDemo" type="button">Add demo friends</button></div>`}
+    ${ME.has_demo_friends ? "" : `<div class="card" style="background: var(--blue-pale)"><b>No friends here yet?</b><p class="muted">Maya, Dev and Sam accept right away, check links and join plans, so you can try everything.</p><button class="btn small" id="addDemo" type="button">Add Maya, Dev and Sam</button></div>`}
     ${req.length ? `<h2>Requests</h2>` + req.map(r => `<div class="card"><div class="row" style="flex-wrap: nowrap"><span class="avatar" style="background: var(--pink-soft)">${esc(initials(r.name))}</span>
-        <div><b>${esc(r.name)}</b><div class="meta">${esc(r.major)} · ${esc(r.year)}</div></div></div>
+        <div><b>${esc(r.name)}${r.unverified ? ' <span class="chip warn">unverified</span>' : ""}</b><div class="meta">${esc(r.major)} · ${esc(r.year)}${r.unverified ? " · signed in without proving they own this email" : ""}</div></div></div>
         <p class="muted" style="font-size: 14px">Wants your agents to connect. Nothing is shared until you accept.</p>
         <div class="row"><button class="btn small" data-act="accept" data-o="${esc(r.from)}" type="button">Accept</button><button class="btn small white" data-act="deny" data-o="${esc(r.from)}" type="button">Deny</button></div></div>`).join("") : ""}
     ${ME.outgoing.length ? `<div class="card"><b>Sent</b>${ME.outgoing.map(o => `<div class="kv"><span>${esc(o.to)}</span><span class="chip">${esc(o.status)}</span></div>`).join("")}<p class="hint">You'll only see a name once they accept.</p></div>` : ""}
     ${fr.length ? `<h2>Connected</h2>` : ""}
-    ${fr.map(f => `<div class="card"><div class="row" style="flex-wrap: nowrap"><span class="avatar">${esc(initials(f.name))}</span><div><b>${esc(f.name)}${f.demo ? ' <span class="chip blue">demo</span>' : ""}</b><div class="meta">${esc(f.major)} · ${esc(f.year)}</div></div></div>
+    ${fr.map(f => `<div class="card"><div class="row" style="flex-wrap: nowrap"><span class="avatar">${esc(initials(f.name))}</span><div><b>${esc(f.name)}${f.unverified ? ' <span class="chip warn">unverified</span>' : ""}</b><div class="meta">${esc(f.major)} · ${esc(f.year)}</div></div></div>
         ${toggle(f, "receive_relay", "Receive opportunities", `${esc(first(f.name))}'s agent can send you finds`)}
         ${toggle(f, "share_freebusy", "Share free/busy for plans", 'Only "Free" or "Busy", never your calendar')}
         ${toggle(f, "share_distance", "Share rough distance", "Only Near, Medium or Far, never where you are")}
@@ -562,8 +562,9 @@ function squad() {
     return `<article class="card"><div class="row between"><span class="chip food">Free food</span><span class="chip ${tone}">${esc(label)}</span></div>
       <h2>${esc(p.title)}</h2><div class="meta">${esc(p.starts_label)}${p.location ? " · " + esc(p.location) : ""}</div>
       <div class="meta">${host ? `You're hosting · ${p.transport === "carpool" ? "carpool, you drive" : "walking together"}` : `Started by ${esc(p.host_name)} · you're a ${esc(p.role)}`}</div>
-      ${host ? `<div class="stack" style="gap: 6px">${Object.entries(p.invited).map(([e, role]) => `<div class="kv"><span>${esc(first(name(e)))} · ${esc(role)}</span><span class="chip ${p.accepted.includes(e) ? "ok" : p.declined.includes(e) ? "bad" : ""}">${p.accepted.includes(e) ? "In" : p.declined.includes(e) ? "Can't go" : "Invited"}</span></div>`).join("") || '<p class="muted">Nobody was free.</p>'}</div>` : ""}
+      ${host ? `<div class="stack" style="gap: 6px">${Object.entries(p.invited).map(([e, role]) => `<div class="kv"><span>${esc(first(name(e)))} · ${esc(role)}${p.late && p.late[e] ? ` · arrives ${esc(p.late_labels[e])}` : ""}</span><span class="chip ${p.accepted.includes(e) ? "ok" : p.declined.includes(e) ? "bad" : ""}">${p.accepted.includes(e) ? "In" : p.declined.includes(e) ? "Can't go" : "Invited"}</span></div>`).join("") || '<p class="muted">Nobody was free.</p>'}</div>` : ""}
       ${p.meet ? `<div class="note"><b>${esc(p.meet)}</b><div class="hint">Only confirmed members get this.</div></div>` : ""}
+      ${p.later && !host ? `<div class="note"><b>Later arrival</b><div class="hint">${esc(p.host_name)}'s agent saw you're busy when it starts, so it's asking about ${esc(p.starts_label)} instead. Only you decide.</div></div>` : ""}
       ${p.note && !host ? `<p class="muted">${esc(p.note)}</p>` : ""}
       ${!host && p.state === "invited" ? `<div class="row"><button class="btn small" data-ans="1" data-p="${esc(p.id)}" type="button">I'm in</button><button class="btn small white" data-ans="0" data-p="${esc(p.id)}" type="button">Can't go</button></div>` : ""}
       ${host && p.state === "proposed" ? `<button class="btn small" data-confirm="${esc(p.id)}" type="button">Confirm plan</button>` : ""}</article>`;
@@ -579,7 +580,7 @@ function squad() {
     ${plans.length ? `<h2>Plans</h2>${plans.map(card).join("")}` : `<p class="muted" style="text-align: center">No plans yet.</p>`}</div>`;
   $("#f").onsubmit = e => { e.preventDefault(); run(e.submitter, async () => {
     const r = await api("/api/squad/start", { title: $("#t").value, location: $("#pl").value, starts: $("#st").value, capacity: Number($("#cap").value) });
-    await refresh(); squad(); toast(r.invited ? `Invited ${r.invited} friend${r.invited === 1 ? "" : "s"}` : "Nobody's free or sharing free/busy yet");
+    await refresh(); squad(); toast(r.invited ? `Invited ${r.invited} friend${r.invited === 1 ? "" : "s"}${r.later ? `, ${r.later} for a later arrival` : ""}` : "Nobody's free or sharing free/busy yet");
   }) };
   app.querySelectorAll("[data-ans]").forEach(b => b.onclick = () => run(b, async () => { await api("/api/squad/answer", { plan_id: b.dataset.p, accept: b.dataset.ans === "1" }); await refresh(); squad() }));
   app.querySelectorAll("[data-confirm]").forEach(b => b.onclick = () => run(b, async () => { await api("/api/squad/confirm", { plan_id: b.dataset.confirm }); await refresh(); squad(); toast("Plan confirmed. Meeting spots sent.") }));

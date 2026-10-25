@@ -1,7 +1,8 @@
 """The scripted demo story. Used by the "Run demo scenario" button and by demo.py.
 
 Dev's agent finds a paid psych study -> two agents verify it (and catch a dead listing, so that source's trust
-drops) -> it relays to Maya (a psychology major) -> Maya sees it -> a Freebie Squad plan with a carpool ->
+drops) -> it relays to Maya (a psychology major) -> Maya sees it -> a Freebie Squad plan with a carpool, where
+Sam's agent says busy at 6:00 so Dev's agent counter-proposes a later arrival and Sam says yes ->
 Maya removes Dev, and the next message from Dev's agent is blocked by the bus.
 """
 from __future__ import annotations
@@ -69,7 +70,7 @@ async def run(world: World, pause: float = 1.2) -> None:
     c.set_perm(MAYA, DEV, "share_distance", True)
     c.set_perm(SAM, DEV, "share_freebusy", True)
     await asyncio.sleep(pause / 2)
-    await step("7. Freebie Squad: Dev plans the free Diwali dinner, with a carpool")
+    await step("7. Freebie Squad: Dev plans the free Diwali dinner. Sam is busy at 6:00, so a later arrival is proposed")
     plan = await squad.start(dev, seed.EVENTS["diwali"])
     await asyncio.sleep(pause)
     await squad.answer(world.agent(MAYA), plan["id"], True)
@@ -77,6 +78,7 @@ async def run(world: World, pause: float = 1.2) -> None:
     await squad.answer(world.agent(SAM), plan["id"], True)
     await asyncio.sleep(pause / 2)
     await squad.confirm(dev, plan["id"])
+    world.event("squad", "Sam only gets the later time and the meeting spot after saying yes.")
     world.event("squad", "Pickup spots go only to confirmed riders, after they confirm.")
     await asyncio.sleep(pause)
 

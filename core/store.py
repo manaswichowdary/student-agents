@@ -7,7 +7,7 @@ import threading
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, name TEXT, major TEXT, year TEXT,
-  verified_at REAL, self_reported INTEGER DEFAULT 0);
+  verified_at REAL, self_reported INTEGER DEFAULT 0, proof TEXT DEFAULT 'email');
 CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, email TEXT, created REAL);
 CREATE TABLE IF NOT EXISTS agent_state (email TEXT PRIMARY KEY, state TEXT);
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
@@ -32,6 +32,11 @@ class Store:
         self.db.row_factory = sqlite3.Row
         self.lock = threading.RLock()
         self.db.executescript(SCHEMA)
+        try:    # older database files were made before accounts had a proof column
+            self.db.execute("ALTER TABLE accounts ADD COLUMN proof TEXT DEFAULT 'email'")
+            self.db.commit()
+        except sqlite3.OperationalError:
+            pass
 
     def x(self, sql: str, args: tuple = ()) -> sqlite3.Cursor:
         with self.lock:

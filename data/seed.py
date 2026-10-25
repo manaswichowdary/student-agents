@@ -7,6 +7,11 @@ from core.util import DAY, WEEK, parse_local
 
 DEMO_START = parse_local("2026-10-26T10:00")       # Monday 10:00 am, Phoenix time
 
+# Accounts with a fixed demo code — skip the random OTP so testers can sign in instantly.
+DEMO_ACCOUNTS = {
+    "mmakkena@asu.edu": "123456",
+}
+
 PHONES = ["mpatel21@asu.edu", "drao7@asu.edu", "skim14@asu.edu"]       # Maya, Dev, Sam
 BACKGROUND = ["pnair3@asu.edu", "jlee88@asu.edu"]                      # Priya, Jordan: verified at start
 
@@ -17,7 +22,8 @@ PRIVATE_PROFILES = {
     "drao7@asu.edu": {"interests": ["software", "hackathons"], "has_car": True, "seats": 2,
                       "zone": "Tempe north", "busy": [["2026-10-26T09:00", "2026-10-26T11:50"]]},
     "skim14@asu.edu": {"interests": ["pre-med", "volunteering"], "has_car": False, "seats": 0,
-                       "zone": "Downtown Phoenix", "busy": [["2026-10-26T15:00", "2026-10-26T16:15"]]},
+                       "zone": "Downtown Phoenix", "busy": [["2026-10-26T15:00", "2026-10-26T16:15"],
+                                ["2026-10-26T17:30", "2026-10-26T18:30"]]},      # a lab that runs into the dinner
     "pnair3@asu.edu": {"interests": ["finance"], "has_car": True, "seats": 3, "zone": "Tempe south",
                        "busy": [["2026-10-26T17:00", "2026-10-26T20:00"]]},
     "jlee88@asu.edu": {"interests": ["health", "research"], "has_car": False, "seats": 0, "zone": "Downtown Phoenix",
@@ -58,6 +64,8 @@ WEB = {
     "https://psychology.asu.edu/research/dining-survey": {"status": 200, "login_wall": True, "timeout": False, "says_closed": False},
     "https://biology.asu.edu/labs/field-study": {"status": 0, "login_wall": False, "timeout": True, "says_closed": False},
     "https://psychology.asu.edu/research/free-textbooks": {"status": 200, "login_wall": False, "timeout": False, "says_closed": False},
+    "https://psychology.asu.edu/research/undergraduate-research-opportunities": {"status": 200, "login_wall": False, "timeout": False, "says_closed": False},
+    "https://eoss.asu.edu/home": {"status": 200, "login_wall": False, "timeout": False, "says_closed": False},
 }
 
 LISTINGS = {
