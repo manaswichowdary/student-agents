@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFF4EA">
+<title>Student Agents by Freebie Radar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap">
+<style>
+/* Freebie Radar look, from the team's Claude Design mockup: peach dotted ground, ink outlines with offset
+   shadows, Fredoka for headings, Nunito for text, blue actions, yellow Freebie. One phone width column,
+   with a side panel on wide screens. */
+:root {
+  --ground: #FFF4EA; --dot: #FFDCE6; --ink: #1E1A16; --muted: #5E574B; --muted2: #4A4337; --paper: #ffffff;
+  --blue: #3366D6; --link: #2A5BC8; --blue-soft: #CFDDF5; --blue-pale: #EEF3FD; --yellow: #FFD25A; --yellow-soft: #FFF1C7;
+  --pink: #FF5C8A; --pink-soft: #FFE3EC; --green: #8FD18B; --green-soft: #E3F5E1; --green-ink: #1F7A3A;
+  --orange-ink: #B4410C; --line: #E6DCC8; --navbg: #FFFDF8; --red: #C2361B;
+  --display: "Fredoka", "Nunito", system-ui, sans-serif;
+  --body: "Nunito", system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+html, body { margin: 0; min-height: 100% }
+body { background-color: var(--ground); background-image: radial-gradient(var(--dot) 3px, transparent 3px);
+  background-size: 36px 36px; color: var(--ink); font: 700 16px/1.4 var(--body) }
+a { color: var(--link); font-weight: 800 } a:hover { color: #1F49A8 }
+button, input, select, textarea { font: inherit; color: inherit }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; margin: 0; text-wrap: balance }
+h1 { font-size: 34px; line-height: 1.08 }
+h2 { font-size: 22px; line-height: 1.15 }
+p { margin: 0 }
+.muted { color: var(--muted) }
+:focus-visible { outline: 3px solid var(--link); outline-offset: 2px }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1fr); min-height: 100vh }
+@media (min-width: 980px) { .layout { grid-template-columns: minmax(0, 1fr) 480px minmax(0, 1fr) } .side { display: flex !important } }
+.side { display: none; grid-column: 1; padding: 40px 32px; flex-direction: column; gap: 18px; justify-content: center; max-width: 440px; justify-self: end }
+.side h2 { font-size: 30px }
+.side .card { padding: 16px }
+.app { grid-column: 1; width: 100%; max-width: 480px; overflow-x: clip; justify-self: center; position: relative; min-height: 100vh;
+  padding: 22px max(20px, env(safe-area-inset-right, 0px)) 120px max(20px, env(safe-area-inset-left, 0px)) }
+@media (min-width: 980px) { .app { grid-column: 2; border-left: 3px solid var(--ink); border-right: 3px solid var(--ink); background-color: var(--ground) } }
+.stack { display: flex; flex-direction: column; gap: 14px; min-width: 0 }
+.stack > *, .row > * { min-width: 0 }
+.row > .btn, .row > .chip, .row > .avatar, .row > .status { flex: none }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap }
+.between { justify-content: space-between }
+
+.brand { display: flex; align-items: center; gap: 8px; font-family: var(--display); font-size: 18px; line-height: 1 }
+.brand small { display: block; font-family: var(--body); font-size: 12px; font-weight: 800; color: var(--muted); margin-top: 2px }
+.card { background: var(--paper); border: 3px solid var(--ink); border-radius: 24px; box-shadow: 5px 6px 0 var(--ink); padding: 16px;
+  display: flex; flex-direction: column; gap: 8px; min-width: 0; overflow-wrap: anywhere }
+.card.urgent { background: var(--pink-soft); padding: 0; overflow: hidden }
+.card.urgent .band { display: flex; align-items: center; gap: 8px; padding: 9px 16px; background: var(--pink); border-bottom: 3px solid var(--ink); font-size: 14px; font-weight: 800 }
+.card.urgent .inner { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px }
+.chip { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; background: var(--paper); border: 2px solid var(--ink);
+  border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 800; white-space: nowrap }
+.chip.study { background: var(--green-soft) } .chip.opportunity { background: var(--yellow-soft) } .chip.scholarship { background: #E5ECFB }
+.chip.food, .chip.event { background: var(--paper) } .chip.ok { background: var(--green) } .chip.bad { background: #FFC9BD }
+.chip.warn { background: var(--yellow) } .chip.blue { background: var(--blue-soft) }
+.meta { font-size: 15px; color: var(--muted2) }
+.money { font-family: var(--display); font-size: 19px; color: var(--green-ink) }
+.why { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--muted2) }
+
+.btn { min-height: 52px; padding: 0 22px; border: 3px solid var(--ink); border-radius: 999px; background: var(--blue); color: #fff;
+  font-family: var(--display); font-size: 19px; font-weight: 700; box-shadow: 0 5px 0 var(--ink); cursor: pointer; text-decoration: none;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px }
+.btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--ink) }
+.btn.small { min-height: 44px; padding: 0 18px; font-size: 16px; box-shadow: 0 3px 0 var(--ink) }
+.btn.white { background: var(--paper); color: var(--ink) }
+.btn.danger { background: var(--paper); color: var(--red) }
+.btn.block { width: 100% }
+.btn:disabled { opacity: .55; cursor: default; transform: none }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--link); font-weight: 800; font-size: 14px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px }
+
+label.lbl { font-size: 15px; font-weight: 800 }
+.input, select.input, textarea.input { width: 100%; min-height: 54px; border: 3px solid var(--ink); border-radius: 16px; background: var(--paper);
+  padding: 0 16px; font-size: 17px; font-weight: 700 }
+textarea.input { padding: 12px 16px }
+.code { letter-spacing: .5em; text-align: center; font-family: var(--display); font-size: 30px; padding-left: .5em }
+.hint { font-size: 14px; color: var(--muted) }
+.err { color: var(--red); font-size: 15px; font-weight: 800 }
+.note { border: 3px dashed var(--ink); border-radius: 18px; padding: 12px 14px; background: var(--yellow-soft); font-size: 15px }
+.toast { position: fixed; left: 50%; bottom: 100px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 18px;
+  border-radius: 999px; font-weight: 800; z-index: 50; max-width: calc(100vw - 40px); text-align: center }
+
+.tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; max-width: 100% }
+.tabs button { flex: none; min-height: 40px; padding: 0 16px; border: 2px solid var(--ink); border-radius: 999px; background: var(--paper);
+  font-size: 14px; font-weight: 800; cursor: pointer }
+.tabs button[aria-pressed="true"] { background: var(--ink); color: #fff }
+.status { display: flex; align-items: center; gap: 6px; background: var(--paper); border: 2px solid var(--ink); border-radius: 999px; padding: 5px 12px; font-size: 13px; font-weight: 800 }
+.dotgreen { width: 10px; height: 10px; border-radius: 50%; background: #2E9E4F }
+
+.avatar { flex: none; width: 46px; height: 46px; border: 3px solid var(--ink); border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-family: var(--display); font-size: 17px; background: var(--blue-soft) }
+.switch { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-top: 2px dashed var(--line) }
+.switch small { display: block; color: var(--muted); font-size: 13px }
+.switch input { appearance: none; flex: none; width: 52px; height: 30px; border: 3px solid var(--ink); border-radius: 999px; background: #E8E1D3; position: relative; cursor: pointer }
+.switch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--paper); border: 2px solid var(--ink); transition: left .15s }
+.switch input:checked { background: var(--green) } .switch input:checked::after { left: 24px }
+
+.choice { display: flex; flex-wrap: wrap; gap: 8px }
+.choice label { cursor: pointer }
+.choice input { position: absolute; opacity: 0; pointer-events: none }
+.choice span { display: inline-flex; min-height: 42px; align-items: center; padding: 0 14px; border: 2px solid var(--ink); border-radius: 999px; background: var(--paper); font-size: 14px; font-weight: 800 }
+.choice input:checked + span { background: var(--ink); color: #fff }
+.choice input:focus-visible + span { outline: 3px solid var(--link); outline-offset: 2px }
+
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px }
+.stat { background: var(--paper); border: 3px solid var(--ink); border-radius: 18px; padding: 10px; text-align: center }
+.stat b { display: block; font-family: var(--display); font-size: 28px; line-height: 1 }
+.tl { display: flex; gap: 12px; align-items: flex-start }
+.tl .ic { flex: none; width: 38px; height: 38px; border: 2px solid var(--ink); border-radius: 12px; display: flex; align-items: center; justify-content: center; background: var(--blue-soft) }
+.tl .ic.bad { background: #FFC9BD } .tl .ic.ok { background: var(--green) }
+.meter { height: 14px; border: 2px solid var(--ink); border-radius: 999px; background: var(--paper); overflow: hidden }
+.meter i { display: block; height: 100%; background: var(--blue); transition: width .6s ease }
+.meter.trusted i { background: #2E9E4F } .meter.flagged i { background: var(--pink) }
+
+nav.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--navbg); border-top: 3px solid var(--ink);
+  display: flex; justify-content: space-around; padding: 8px max(8px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)) }
+@media (min-width: 980px) { nav.tabbar { left: 50%; right: auto; width: 480px; transform: translateX(-50%); border-left: 3px solid var(--ink); border-right: 3px solid var(--ink) } }
+nav.tabbar a { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 60px; min-height: 48px; color: var(--muted); text-decoration: none; font-size: 12px; font-weight: 800 }
+nav.tabbar a span { display: flex; padding: 3px 14px; border-radius: 999px }
+nav.tabbar a[aria-current="page"] { color: var(--link) } nav.tabbar a[aria-current="page"] span { background: var(--blue-soft) }
+
+dialog.sheet { border: 3px solid var(--ink); border-radius: 28px 28px 0 0; padding: 0; margin: auto auto 0; width: min(480px, 100vw); max-width: 100vw;
+  max-height: 88vh; background: var(--ground); color: var(--ink) }
+dialog.sheet::backdrop { background: rgba(30, 26, 22, .45) }
+dialog.sheet .in { padding: 12px 20px calc(24px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 14px }
+.grab { width: 48px; height: 6px; border-radius: 999px; background: var(--ink); margin: 4px auto 0; opacity: .3 }
+.kv { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 2px dashed var(--line); font-size: 15px }
+.kv span:first-child { color: var(--muted); flex: none; max-width: 45% } .kv span:last-child { text-align: right; overflow-wrap: anywhere }
+.never { display: flex; flex-wrap: wrap; gap: 8px }
+.mascot { display: block; margin: 0 auto }
+@media (prefers-reduced-motion: reduce) { .meter i, .switch input::after { transition: none } }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="side" aria-label="About">
+    <div class="brand" id="sideBrand"></div>
+    <h2>Your agent finds it. <span style="color: var(--link)">Your friends get it.</span></h2>
+    <p class="muted">Every ASU student gets a personal agent. Agents pass free food, paid studies, scholarships and hidden opportunities to friends they fit, only after both students say yes.</p>
+    <div class="card"><b>Try it alone</b><span class="muted">Sign in, then tap "Add demo friends". Maya, Dev and Sam are demo agents: they accept requests, check links, share finds and join plans.</span></div>
+    <p class="hint">Built for the Cubbie Hackathon, Track 2. <a href="/demo">See the 3 phone demo</a></p>
+  </aside>
+  <main class="app" id="app" aria-live="polite"></main>
+</div>
+<nav class="tabbar" id="tabbar" aria-label="Main" hidden></nav>
+<dialog class="sheet" id="sheet"><div class="in" id="sheetBody"></div></dialog>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const app = $("#app");
+let ME = null, auth = { email: "", code: "", demo: null, inDirectory: false }, filter = "all", busy = false, poll = null;
+
+// ---------------------------------------------------------------- Freebie, the mascot (from the team's design)
+function freebie(mood = "wave", size = 180) {
+  const h = Math.round(size * 224 / 200);
+  const arms = { wave: ['M34 132 L10 92', 'M168 136 L186 170'], cheer: ['M34 128 L12 86', 'M166 128 L188 86'], scan: ['M34 132 L18 168', 'M166 120 L178 86'] }[mood];
+  const eyes = mood === "cheer"
+    ? '<path d="M68 128 Q78 116 88 128" fill="none" stroke="#1E1A16" stroke-width="6" stroke-linecap="round"/><path d="M112 128 Q122 116 132 128" fill="none" stroke="#1E1A16" stroke-width="6" stroke-linecap="round"/>'
+    : '<circle cx="78" cy="128" r="10" fill="#1E1A16"/><circle cx="81" cy="124" r="3.5" fill="#fff"/><circle cx="122" cy="128" r="10" fill="#1E1A16"/><circle cx="125" cy="124" r="3.5" fill="#fff"/>';
+  const mouth = mood === "scan" ? '<ellipse cx="100" cy="152" rx="8" ry="7" fill="#7A2E22" stroke="#1E1A16" stroke-width="4"/>'
+    : '<path d="M84 145 Q100 170 116 145 Z" fill="#7A2E22" stroke="#1E1A16" stroke-width="4" stroke-linejoin="round"/>';
+  const waves = mood === "scan" ? '<circle cx="100" cy="16" r="16" fill="none" stroke="#3366D6" stroke-width="3" opacity=".5"/><circle cx="100" cy="16" r="26" fill="none" stroke="#3366D6" stroke-width="3" opacity=".25"/>' : "";
+  const arm = d => `<path d="${d}" stroke="#1E1A16" stroke-width="20" stroke-linecap="round"/><path d="${d}" stroke="#FFD25A" stroke-width="11" stroke-linecap="round"/>`;
+  return `<svg class="mascot" role="img" aria-label="Freebie, the Student Agents mascot" width="${size}" height="${h}" viewBox="0 0 200 224">${waves}
+    <line x1="100" y1="62" x2="100" y2="24" stroke="#1E1A16" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="100" cy="18" r="9" fill="#FF7A8A" stroke="#1E1A16" stroke-width="4"/>${arm(arms[0])}${arm(arms[1])}
+    <ellipse cx="78" cy="206" rx="18" ry="10" fill="#E0A82E" stroke="#1E1A16" stroke-width="4"/><ellipse cx="122" cy="206" rx="18" ry="10" fill="#E0A82E" stroke="#1E1A16" stroke-width="4"/>
+    <path d="M100 58 C 152 58, 180 92, 180 134 C 180 176, 148 200, 100 200 C 52 200, 20 176, 20 134 C 20 92, 48 58, 100 58 Z" fill="#FFD25A" stroke="#1E1A16" stroke-width="5"/>
+    <ellipse cx="70" cy="96" rx="20" ry="11" fill="#FFE8A8" transform="rotate(-25 70 96)"/>${eyes}
+    <ellipse cx="58" cy="150" rx="11" ry="6.5" fill="#FF9AA8"/><ellipse cx="142" cy="150" rx="11" ry="6.5" fill="#FF9AA8"/>${mouth}</svg>`;
+}
+const I = {
+  radar: '<svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12l6-6"/></svg>',
+  clock: '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  shield: '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>',
+  spark: '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="#FFD25A" stroke="#1E1A16" stroke-width="1.6"><path d="M12 2 C13 8 16 11 22 12 C16 13 13 16 12 22 C11 16 8 13 2 12 C8 11 11 8 12 2 Z"/></svg>',
+  lock: '<svg role="img" aria-label="Locked" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5E574B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+  mail: '<svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1E1A16" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 7.5l9 6 9-6"/></svg>',
+  check: '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>',
+  x: '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  arrow: '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+};
+const NAV = [
+  ["feed", "For you", '<path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z" stroke-linejoin="round"/>'],
+  ["friends", "Friends", '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.3-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.5c2.6 0 4.6 1.6 5.3 4.5"/>'],
+  ["share", "Share", '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>'],
+  ["squad", "Squad", '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" stroke-linejoin="round"/><circle cx="12" cy="9.5" r="2.5"/>'],
+  ["agent", "My agent", '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12l6-6"/>'],
+];
+$("#sideBrand").innerHTML = `${I.radar}<div>Student Agents<small>by Freebie Radar</small></div>`;
+
+// ---------------------------------------------------------------- helpers
+async function api(path, body) {
+  const r = await fetch(path, { method: body === undefined ? "GET" : "POST", headers: { "Content-Type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body), credentials: "same-origin" });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.detail || "Something went wrong. Try again.");
+  return j;
+}
+function toast(text) {
+  const t = document.createElement("div"); t.className = "toast"; t.textContent = text; document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+function route() { return (location.hash || "#feed").slice(1).split("?")[0] }
+function go(r) { if (location.hash === "#" + r) render(); else location.hash = r }
+function first(name) { return String(name || "").split(" ")[0] }
+function initials(name) { return String(name || "?").split(" ").map(s => s[0]).slice(0, 2).join("").toUpperCase() }
+function sheet(html) { $("#sheetBody").innerHTML = `<div class="grab"></div>${html}`; $("#sheet").showModal() }
+$("#sheet").addEventListener("click", e => { if (e.target.id === "sheet" || e.target.closest("[data-close]")) $("#sheet").close() });
+async function run(btn, fn) {
+  if (busy) return; busy = true; const old = btn && btn.innerHTML; if (btn) { btn.disabled = true; btn.innerHTML = "One sec…" }
+  try { await fn() } catch (e) { toast(e.message) } finally { busy = false; if (btn && btn.isConnected) { btn.disabled = false; btn.innerHTML = old } }
+}
+async function refresh() { ME = await api("/api/me") }
+
+// ---------------------------------------------------------------- sign in
+function signIn() {
+  app.innerHTML = `<div class="stack" style="min-height: calc(100vh - 60px)">
+    <div class="brand">${I.radar}<div>Student Agents<small>by Freebie Radar</small></div></div>
+    <div style="position: relative; margin: 10px auto 0; width: 240px; height: 220px">
+      <div style="position: absolute; left: -10px; top: 30px; width: 260px; height: 190px; border-radius: 48% 52% 45% 55% / 55% 45% 55% 45%; background: var(--blue-soft)"></div>
+      <div style="position: absolute; left: 30px; top: 0">${freebie("wave", 180)}</div>
+      <div style="position: absolute; right: -18px; top: 6px; background: #fff; border: 3px solid var(--ink); border-radius: 18px; padding: 6px 12px; font-size: 14px; font-weight: 800; box-shadow: 0 4px 0 var(--ink)">hi bestie!</div>
+    </div>
+    <h1 style="text-align: center; font-size: 36px">Your agent finds it.<br><span style="color: var(--link)">Your friends get it.</span></h1>
+    <p class="muted" style="text-align: center; font-size: 17px">Nobody sees your schedule. Free food, paid studies and scholarships, shared only with friends you pick.</p>
+    <form id="f" class="stack" style="margin-top: auto" novalidate>
+      <label class="lbl" for="email">ASU email</label>
+      <input class="input" id="email" type="email" autocomplete="email" placeholder="you@asu.edu" value="${esc(auth.email)}" required>
+      <p class="hint">Only @asu.edu emails. We'll send you a 6 digit code.</p>
+      <p class="err" id="err" role="alert"></p>
+      <button class="btn block" type="submit">Send code</button>
+    </form></div>`;
+  $("#f").onsubmit = e => { e.preventDefault(); run(e.submitter, async () => {
+    try {
+      const r = await api("/api/auth/start", { email: $("#email").value });
+      auth = { email: r.email, demo: r.demo_code, inDirectory: r.in_directory, code: "" };
+      codeScreen();
+    } catch (err) { $("#err").textContent = err.message }
+  }) };
+}
+
+function codeScreen() {
+  app.innerHTML = `<div class="stack" style="min-height: calc(100vh - 60px)">
+    <button class="btn white small" type="button" id="back" aria-label="Back" style="width: 48px; padding: 0; align-self: flex-start"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div style="margin-top: 24px; width: 64px; height: 64px; border: 3px solid var(--ink); border-radius: 20px; background: var(--yellow); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 0 var(--ink)">${I.mail}</div>
+    <h1>Check your email</h1>
+    <p class="muted" style="font-size: 17px">We sent a 6 digit code to <b style="color: var(--ink)">${esc(auth.email)}</b></p>
+    ${auth.demo ? `<div class="note"><b>Demo mode:</b> email isn't set up on this server yet, so here's your code: <b style="font-family: var(--display); font-size: 20px; letter-spacing: .1em">${esc(auth.demo)}</b></div>` : ""}
+    <form id="f" class="stack" novalidate>
+      <label class="lbl" for="code">6 digit code</label>
+      <input class="input code" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required>
+      <div class="row muted" style="font-size: 15px">${I.clock}Code expires in 10 minutes</div>
+      <p class="err" id="err" role="alert"></p>
+      <button class="btn block" type="submit">Verify</button>
+    </form>
+    <p class="muted" style="font-size: 15px">Didn't get it? <button class="linkbtn" id="resend" type="button">Resend code</button></p></div>`;
+  $("#code").focus();
+  $("#back").onclick = signIn;
+  $("#resend").onclick = e => run(e.target, async () => { const r = await api("/api/auth/start", { email: auth.email }); auth.demo = r.demo_code; codeScreen(); toast("New code sent") });
+  $("#f").onsubmit = e => { e.preventDefault(); run(e.submitter, async () => {
+    try {
+      auth.code = $("#code").value.trim();
+      const r = await api("/api/auth/check", { email: auth.email, code: auth.code });
+      if (r.needs_profile) return profileScreen();
+      await api("/api/auth/verify", { email: auth.email, code: auth.code });
+      await refresh(); welcome();
+    } catch (err) { $("#err").textContent = err.message }
+  }) };
+}
+
+function profileScreen() {
+  app.innerHTML = `<div class="stack">
+    <div class="row">${freebie("wave", 70)}<h1 style="font-size: 30px">Almost there!</h1></div>
+    <p class="muted">You're not in our demo directory, so tell your agent a little about you. It only uses this to match finds to you.</p>
+    <form id="f" class="stack" novalidate>
+      <label class="lbl" for="name">First and last name</label><input class="input" id="name" autocomplete="name" required>
+      <label class="lbl" for="major">Major</label><input class="input" id="major" placeholder="Psychology" required>
+      <label class="lbl" for="year">Year</label>
+      <select class="input" id="year"><option value="freshman">Freshman</option><option value="sophomore">Sophomore</option><option value="junior" selected>Junior</option><option value="senior">Senior</option><option value="graduate">Graduate</option></select>
+      <p class="hint">Friends see your name, major and year on connection requests, marked "self reported". In a real launch these would come from ASU sign in.</p>
+      <p class="err" id="err" role="alert"></p>
+      <button class="btn block" type="submit">Create my agent</button>
+    </form></div>`;
+  $("#f").onsubmit = e => { e.preventDefault(); run(e.submitter, async () => {
+    try {
+      await api("/api/auth/verify", { email: auth.email, code: auth.code, name: $("#name").value, major: $("#major").value, year: $("#year").value });
+      await refresh(); welcome();
+    } catch (err) { $("#err").textContent = err.message }
+  }) };
+}
+
+function welcome() {
+  const src = ME.self_reported ? "From your sign up" : "From the ASU directory";
+  const row = (k, v, last) => `<div class="kv" style="${last ? "border: 0" : ""}"><div><div class="muted" style="font-size: 13px">${k}</div><div style="font-size: 19px; font-weight: 800">${esc(v)}</div></div>${ME.self_reported ? "" : I.lock}</div>`;
+  const promise = (bg, icon, text) => `<li class="row" style="flex-wrap: nowrap; align-items: flex-start"><span style="flex: none; width: 34px; height: 34px; border: 2px solid var(--ink); border-radius: 12px; background: ${bg}; display: flex; align-items: center; justify-content: center">${icon}</span>${text}</li>`;
+  app.innerHTML = `<div class="stack">
+    <div class="row" style="flex-wrap: nowrap">${freebie("cheer", 96)}<div class="stack" style="gap: 6px">
+      <span class="chip ok">${I.check}${ME.self_reported ? "Email verified" : "ASU verified"}</span><h1>You're verified, ${esc(first(ME.name))}!</h1></div></div>
+    <section class="card" style="padding: 0; overflow: hidden"><div class="row" style="padding: 12px 18px; background: var(--blue-soft); border-bottom: 3px solid var(--ink); font-size: 14px">${ME.self_reported ? "" : I.lock}${src}</div>
+      <div style="padding: 4px 18px 12px">${row("Name", ME.name)}${row("Major", ME.major)}${row("Year", ME.year[0].toUpperCase() + ME.year.slice(1), true)}</div></section>
+    <p class="hint">${ME.self_reported ? "Your agent uses these to match finds to you." : "These come from ASU and can't be edited here. Your agent uses them to match finds to you."}</p>
+    <h2>Our promises to you</h2>
+    <ul class="stack" style="margin: 0; padding: 0; list-style: none; gap: 10px">
+      ${promise("var(--yellow)", I.clock, "Your schedule never leaves your agent.")}
+      ${promise("#FF8FB1", I.shield, "Agents only talk after both of you say yes.")}
+      ${promise("var(--green)", I.check, "Every share is logged so you can check it.")}
+    </ul>
+    <button class="btn block" id="go" type="button" style="margin-top: 10px">Meet my feed</button></div>`;
+  $("#go").onclick = () => go("feed");
+}
+
+// ---------------------------------------------------------------- feed
+const TYPE = { food: "Free food", study: "Paid study", scholarship: "Scholarship", opportunity: "Hidden opportunity", event: "Free event" };
+const FILTERS = [["all", "All"], ["food", "Food"], ["study", "Studies"], ["scholarship", "Scholarships"], ["opportunity", "Opportunities"]];
+function feedCard(it, i) {
+  const money = it.pay ? `<div class="money" style="${it.type === "opportunity" ? "color: var(--orange-ink)" : ""}">$${Number(it.pay).toLocaleString()}${it.type === "study" ? "" : it.type === "opportunity" ? " stipend" : ""}</div>` : "";
+  const badge = it.verified ? `<span class="chip ok">${I.shield}${it.line.startsWith("Found by") ? "Verified by your agent" : "Verified by 2 agents"}</span>` : "";
+  const body = `<span class="chip ${esc(it.type)}">${esc(TYPE[it.type] || "Find")}</span>
+    <h2>${esc(it.title)}</h2>${money}
+    <div class="meta">${esc(it.org)}${it.location ? " · " + esc(it.location) : ""}</div>
+    <div class="meta">${esc(it.line)}</div><div>${badge}</div>
+    <div class="why">${I.spark}${esc(it.why)}</div>
+    <div class="row between" style="margin-top: 4px"><button class="linkbtn" type="button" data-shared="${i}">What was shared</button>
+      <a class="btn small ${it.urgent ? "" : "white"}" href="${esc(it.url)}" target="_blank" rel="noopener noreferrer">Open link</a></div>`;
+  return it.urgent ? `<article class="card urgent"><div class="band">${I.clock}Closes ${esc(it.closes)}</div><div class="inner">${body}</div></article>`
+    : `<article class="card">${body}</article>`;
+}
+function feed() {
+  const items = ME.feed.filter(it => filter === "all" || it.type === filter || (filter === "food" && it.type === "event"));
+  const urgent = ME.feed.filter(i => i.urgent).length;
+  const head = `<header class="stack" style="gap: 12px">
+    <div class="row between"><div class="muted">Hi ${esc(first(ME.name))}</div><div class="status"><span class="dotgreen"></span>Agent on</div></div>
+    <h1 style="font-size: 36px">For you</h1>
+    ${ME.feed.length ? `<p class="muted">${ME.feed.length} find${ME.feed.length === 1 ? "" : "s"}${urgent ? ` · ${urgent} closing within a day` : ""}</p>
+    <div class="tabs" role="group" aria-label="Filter">${FILTERS.map(([k, v]) => `<button type="button" data-f="${k}" aria-pressed="${filter === k}">${v}</button>`).join("")}</div>` : ""}
+  </header>`;
+  const demoBox = ME.has_demo_friends ? `<div class="card" style="background: var(--blue-pale)"><b>Try it now</b><p class="muted">Ask a demo friend's agent to find something for you. Two agents check the link first, then it lands here if it fits you.</p>
+      <button class="btn small" id="demoFind" type="button">Ask a friend's agent for a find</button></div>` : "";
+  if (!ME.feed.length) {
+    app.innerHTML = `${head}<div class="stack" style="align-items: center; text-align: center; padding-top: 18px">
+      <div style="position: relative; width: 260px; height: 230px"><div style="position: absolute; left: 10px; top: 10px; width: 240px; height: 220px; border-radius: 50%; border: 3px dashed #9DB8F2"></div>
+        <div style="position: absolute; left: 50px; top: 18px">${freebie("scan", 160)}</div></div>
+      <h2 style="font-size: 28px">Nothing yet.<br>Your agent is looking.</h2>
+      <p class="muted">Friends' agents send you finds once you connect. Want to see it work right away? Add the demo friends.</p>
+      ${ME.has_demo_friends ? "" : `<button class="btn block" id="addDemo" type="button">Add demo friends (Maya, Dev, Sam)</button>`}
+      <button class="btn block white" type="button" id="toFriends">Add a real friend</button>
+      <a href="#share">Share something you found</a></div>${demoBox ? `<div style="margin-top: 18px">${demoBox}</div>` : ""}`;
+  } else {
+    app.innerHTML = `${head}<div class="stack" style="gap: 18px; margin-top: 16px">${demoBox}${items.map((it) => feedCard(it, ME.feed.indexOf(it))).join("") || `<p class="muted">Nothing in this filter yet.</p>`}</div>`;
+  }
+  app.querySelectorAll("[data-f]").forEach(b => b.onclick = () => { filter = b.dataset.f; feed() });
+  app.querySelectorAll("[data-shared]").forEach(b => b.onclick = () => sharedSheet(ME.feed[b.dataset.shared]));
+  $("#addDemo") && ($("#addDemo").onclick = e => run(e.target, async () => { await api("/api/demo-friends", {}); await refresh(); toast("Maya, Dev and Sam accepted"); feed() }));
+  $("#toFriends") && ($("#toFriends").onclick = () => go("friends"));
+  $("#demoFind") && ($("#demoFind").onclick = e => run(e.target, async () => { const r = await api("/api/demo-find", {}); await refresh(); toast(r.result); feed() }));
+}
+function sharedSheet(it) {
+  const L = it.shared && it.shared.listing;
+  if (!L) {
+    sheet(`<h2>Found by your agent</h2><p class="muted">Nothing crossed between agents for this one. Your agent found it and checked it fits you.</p>
+      <div class="kv"><span>Why it fits</span><span>${esc(it.why)}</span></div><button class="btn block" data-close type="button">Got it</button>`);
+    return;
+  }
+  const rows = [["Title", L.title], ["Organization", L.org], ["Type", TYPE[L.type] || L.type], ["Pay", L.pay_amount ? "$" + L.pay_amount : "none listed"],
+    ["Deadline", L.deadline ? it.closes : "none listed"], ["Location", L.location || "none listed"], ["Link", it.shared.verified ? "Checked, working" : "Not verified"],
+    ["Source", L.source], ["Who it's for", (L.eligibility_tags || []).join(", ") || "anyone"]];
+  const from = it.line.replace(/^Forwarded by /, "").split(",")[0];
+  sheet(`<h2>What was shared</h2><p class="muted">${esc(L.title)}, from ${esc(from)}'s agent to yours</p>
+    <div class="card" style="gap: 0"><b style="margin-bottom: 4px">Crossed between agents (${rows.length} fields)</b>${rows.map(([k, v]) => `<div class="kv"><span>${k}</span><span>${esc(v)}</span></div>`).join("")}</div>
+    <p class="why">${I.spark}Your agent matched it to you on its own. ${esc(from)}'s agent never saw your major.</p>
+    <b>Never shared</b><div class="never"><span class="chip bad">${I.x}Your profile</span><span class="chip bad">${I.x}Your schedule</span><span class="chip bad">${I.x}Your location</span></div>
+    <button class="btn block" data-close type="button">Got it</button>`);
+}
+
+// ---------------------------------------------------------------- friends
+function friends() {
+  const req = ME.requests, fr = ME.friends;
+  const toggle = (f, k, title, sub) => `<label class="switch"><span>${title}<small>${sub}</small></span><input type="checkbox" data-perm="${k}" data-o="${esc(f.email)}" ${f.perms[k] ? "checked" : ""}></label>`;
+  app.innerHTML = `<div class="stack">
+    <h1>Friends</h1><p class="muted">${fr.length} connected${req.length ? ` · ${req.length} request${req.length === 1 ? "" : "s"}` : ""}</p>
+    <form class="card" id="add" novalidate><label class="lbl" for="target">Add a friend</label>
+      <div class="row" style="flex-wrap: nowrap"><input class="input" id="target" placeholder="Their ASU ID or email" autocomplete="off" required><button class="btn small" type="submit">Send</button></div>
+      <p class="hint" id="addMsg">We never confirm who has an account.</p></form>
+    ${ME.has_demo_friends ? "" : `<div class="card" style="background: var(--blue-pale)"><b>No friends here yet?</b><p class="muted">Maya, Dev and Sam are demo agents. They accept right away, check links and join plans, so you can try everything.</p><button class="btn small" id="addDemo" type="button">Add demo friends</button></div>`}
+    ${req.length ? `<h2>Requests</h2>` + req.map(r => `<div class="card"><div class="row" style="flex-wrap: nowrap"><span class="avatar" style="background: var(--pink-soft)">${esc(initials(r.name))}</span>
+        <div><b>${esc(r.name)}</b><div class="meta">${esc(r.major)} · ${esc(r.year)}</div></div></div>
+        <p class="muted" style="font-size: 14px">Wants your agents to connect. Nothing is shared until you accept.</p>
+        <div class="row"><button class="btn small" data-act="accept" data-o="${esc(r.from)}" type="button">Accept</button><button class="btn small white" data-act="deny" data-o="${esc(r.from)}" type="button">Deny</button></div></div>`).join("") : ""}
+    ${ME.outgoing.length ? `<div class="card"><b>Sent</b>${ME.outgoing.map(o => `<div class="kv"><span>${esc(o.to)}</span><span class="chip">${esc(o.status)}</span></div>`).join("")}<p class="hint">You'll only see a name once they accept.</p></div>` : ""}
+    ${fr.length ? `<h2>Connected</h2>` : ""}
+    ${fr.map(f => `<div class="card"><div class="row" style="flex-wrap: nowrap"><span class="avatar">${esc(initials(f.name))}</span><div><b>${esc(f.name)}${f.demo ? ' <span class="chip blue">demo</span>' : ""}</b><div class="meta">${esc(f.major)} · ${esc(f.year)}</div></div></div>
+        ${toggle(f, "receive_relay", "Receive opportunities", `${esc(first(f.name))}'s agent can send you finds`)}
+        ${toggle(f, "share_freebusy", "Share free/busy for plans", 'Only "Free" or "Busy", never your calendar')}
+        ${toggle(f, "share_distance", "Share rough distance", "Only Near, Medium or Far, never where you are")}
+        <div class="row"><button class="btn small danger" data-act="remove" data-o="${esc(f.email)}" type="button">Remove</button><button class="btn small danger" data-act="block" data-o="${esc(f.email)}" type="button">Block</button></div></div>`).join("")}
+  </div>`;
+  $("#add").onsubmit = e => { e.preventDefault(); run(e.submitter, async () => { const r = await api("/api/friends/request", { target: $("#target").value }); $("#addMsg").textContent = r.message; $("#target").value = ""; await refresh(); const m = r.message; friends(); $("#addMsg").textContent = m }) };
+  $("#addDemo") && ($("#addDemo").onclick = e => run(e.target, async () => { await api("/api/demo-friends", {}); await refresh(); toast("Maya, Dev and Sam accepted"); friends() }));
+  app.querySelectorAll("[data-act]").forEach(b => b.onclick = () => run(b, async () => {
+    if (b.dataset.act === "remove" || b.dataset.act === "block") {
+      sheet(`<h2>${b.dataset.act === "block" ? "Block" : "Remove"} this friend?</h2><p class="muted">Your agents stop talking right away. Plans with them are cancelled.${b.dataset.act === "block" ? " They can't send you a request again." : ""} They aren't told.</p>
+        <button class="btn block" id="yes" type="button" style="background: var(--red)">${b.dataset.act === "block" ? "Block" : "Remove"}</button><button class="btn block white" data-close type="button">Cancel</button>`);
+      $("#yes").onclick = () => run($("#yes"), async () => { await api("/api/friends/" + b.dataset.act, { other: b.dataset.o }); $("#sheet").close(); await refresh(); friends(); toast("Done") });
+      return;
+    }
+    await api("/api/friends/" + b.dataset.act, { other: b.dataset.o }); await refresh(); friends();
+  }));
+  app.querySelectorAll("[data-perm]").forEach(c => c.onchange = () => run(null, async () => {
+    try { await api("/api/friends/perm", { other: c.dataset.o, perm: c.dataset.perm, value: c.checked }); await refresh() } catch (e) { c.checked = !c.checked; throw e }
+  }));
+}
+
+// ---------------------------------------------------------------- share a find
+const RESULTS = {
+  kept: ["ok", "It fits you, so it's in your feed", "Your agent checked it and kept it for you."],
+  scam: ["bad", "Flagged as a scam, not shared", "It asks for money, bank info or off platform contact. Nobody was sent this."],
+  closed: ["bad", "Link is dead, not shared", "Your friends' agents found the page gone or closed. Fix the link and try again."],
+  unknown: ["warn", "Couldn't verify yet", "The page didn't load, hit a login wall, or fewer than 2 friends could check it. Nothing was shared."],
+  flagged: ["bad", "Source is flagged, not shared", "This source has too many dead links or scams."],
+  expired: ["bad", "Already closed", "The deadline has passed."],
+  duplicate: ["warn", "Already shared", "Your agent already handled this one."],
+};
+function share() {
+  app.innerHTML = `<div class="stack"><h1>Share a find</h1><p class="muted">Your agent checks the link and the source before any friend sees it.</p>
+    <form class="stack" id="f" novalidate>
+      <label class="lbl" for="title">Title</label><input class="input" id="title" placeholder="Free pizza at Hack Night" required maxlength="160">
+      <label class="lbl" for="org">Organization</label><input class="input" id="org" placeholder="Software Developers Association" required maxlength="160">
+      <fieldset style="border: 0; padding: 0; margin: 0" class="stack"><legend class="lbl" style="margin-bottom: 8px">Type</legend>
+        <div class="choice">${[["food", "Free food"], ["study", "Paid study"], ["scholarship", "Scholarship"], ["opportunity", "Opportunity"]].map(([k, v], i) => `<label><input type="radio" name="type" value="${k}" ${i === 0 ? "checked" : ""}><span>${v}</span></label>`).join("")}</div></fieldset>
+      <label class="lbl" for="deadline">Deadline</label><input class="input" id="deadline" type="date">
+      <label class="lbl" for="url">Link</label><input class="input" id="url" type="url" placeholder="https://" required>
+      <label class="lbl" for="source">Where you saw it</label>
+      <select class="input" id="source"><option>SunDevilCentral</option><option>ASU college pages</option><option>Club or department email</option><option>Psych Dept Discord</option><option>Discord or Slack</option><option>Other website</option></select>
+      <label class="lbl" for="tags">Who it's for</label><input class="input" id="tags" placeholder="psychology, research, any major">
+      <p class="hint">Majors or interests, separated by commas. Friends' agents use this to decide if it fits their student.</p>
+      <div class="row" style="flex-wrap: nowrap"><div class="stack" style="flex: 1; gap: 8px"><label class="lbl" for="pay">Pay ($, optional)</label><input class="input" id="pay" type="number" min="0" step="1"></div>
+        <div class="stack" style="flex: 1; gap: 8px"><label class="lbl" for="loc">Place (optional)</label><input class="input" id="loc" placeholder="Memorial Union"></div></div>
+      <p class="hint">Goes to friends who turned on "Receive opportunities". Your name shows as the one who forwarded it.</p>
+      <p class="err" id="err" role="alert"></p>
+      <button class="btn block" type="submit">Check and share</button>
+    </form><div id="result"></div></div>`;
+  $("#f").onsubmit = e => { e.preventDefault(); run(e.submitter, async () => {
+    $("#err").textContent = "";
+    try {
+      const r = await api("/api/share", { title: $("#title").value, org: $("#org").value, type: document.querySelector('[name="type"]:checked').value,
+        deadline: $("#deadline").value, url: $("#url").value, source: $("#source").value, tags: $("#tags").value,
+        pay: $("#pay").value ? Number($("#pay").value) : null, location: $("#loc").value });
+      const res = String(r.result);
+      const [tone, title, text] = res.startsWith("relayed") ? ["ok", `Verified and shared with ${res.split(" ").pop()} friend${res.endsWith(" 1") ? "" : "s"}`, "Two friends' agents checked the link. Each friend's own agent decides if it fits them."]
+        : RESULTS[res] || ["warn", "Not shared", res];
+      $("#result").innerHTML = `<div class="card" style="margin-top: 8px; background: ${tone === "ok" ? "var(--green-soft)" : tone === "bad" ? "#FFE5DE" : "var(--yellow-soft)"}">
+        <span class="chip ${tone}">${tone === "ok" ? I.check : I.x}${esc(title)}</span><b>${esc($("#title").value)}</b><p class="muted">${esc(text)}</p>
+        <a href="#agent">See what your agent did</a></div>`;
+      $("#result").scrollIntoView({ behavior: "smooth", block: "center" });
+      await refresh();
+    } catch (err) { $("#err").textContent = err.message }
+  }) };
+}
+
+// ---------------------------------------------------------------- squad
+function squad() {
+  const ev = ME.suggested_event;
+  const plans = ME.plans;
+  const name = e => (ME.friends.find(f => f.email === e) || {}).name || "Someone";
+  const card = p => {
+    const host = p.host === ME.email;
+    const tone = p.state === "confirmed" ? "ok" : ["cancelled", "rejected", "expired"].includes(p.state) ? "bad" : "warn";
+    const label = { proposed: "Waiting on replies", invited: "Invited", accepted: "You said yes", declined: "You said no" }[p.state] || p.state;
+    return `<article class="card"><div class="row between"><span class="chip food">Free food</span><span class="chip ${tone}">${esc(label)}</span></div>
+      <h2>${esc(p.title)}</h2><div class="meta">${esc(p.starts_label)}${p.location ? " · " + esc(p.location) : ""}</div>
+      <div class="meta">${host ? `You're hosting · ${p.transport === "carpool" ? "carpool, you drive" : "walking together"}` : `Started by ${esc(p.host_name)} · you're a ${esc(p.role)}`}</div>
+      ${host ? `<div class="stack" style="gap: 6px">${Object.entries(p.invited).map(([e, role]) => `<div class="kv"><span>${esc(first(name(e)))} · ${esc(role)}</span><span class="chip ${p.accepted.includes(e) ? "ok" : p.declined.includes(e) ? "bad" : ""}">${p.accepted.includes(e) ? "In" : p.declined.includes(e) ? "Can't go" : "Invited"}</span></div>`).join("") || '<p class="muted">Nobody was free.</p>'}</div>` : ""}
+      ${p.meet ? `<div class="note"><b>${esc(p.meet)}</b><div class="hint">Only confirmed members get this.</div></div>` : ""}
+      ${p.note && !host ? `<p class="muted">${esc(p.note)}</p>` : ""}
+      ${!host && p.state === "invited" ? `<div class="row"><button class="btn small" data-ans="1" data-p="${esc(p.id)}" type="button">I'm in</button><button class="btn small white" data-ans="0" data-p="${esc(p.id)}" type="button">Can't go</button></div>` : ""}
+      ${host && p.state === "proposed" ? `<button class="btn small" data-confirm="${esc(p.id)}" type="button">Confirm plan</button>` : ""}</article>`;
+  };
+  app.innerHTML = `<div class="stack"><h1>Freebie Squad</h1><p class="muted">Go to free stuff together. Friends only see Free or Busy, and Near, Medium or Far. Never your calendar or where you are.</p>
+    <form class="card" id="f" novalidate><b>Plan a trip to a free event</b>
+      <label class="lbl" for="t">Event</label><input class="input" id="t" value="${esc(ev.title)}" required maxlength="120">
+      <label class="lbl" for="pl">Place</label><select class="input" id="pl">${ME.places.map(p => `<option ${p === ev.location ? "selected" : ""}>${esc(p)}</option>`).join("")}</select>
+      <label class="lbl" for="st">Starts</label><input class="input" id="st" type="datetime-local" value="${esc(ev.starts.slice(0, 16))}" required>
+      <label class="lbl" for="cap">Group size</label><input class="input" id="cap" type="number" min="2" max="12" value="4">
+      <p class="hint">Asks friends who turned on "Share free/busy for plans". ${ME.settings.has_car ? `You have a car with ${ME.settings.seats} seat(s), so it'll be a carpool.` : 'No car set, so you\'ll walk together. <a href="#agent">Add a car</a>'}</p>
+      <button class="btn block" type="submit">Ask my friends</button></form>
+    ${plans.length ? `<h2>Plans</h2>${plans.map(card).join("")}` : `<p class="muted" style="text-align: center">No plans yet.</p>`}</div>`;
+  $("#f").onsubmit = e => { e.preventDefault(); run(e.submitter, async () => {
+    const r = await api("/api/squad/start", { title: $("#t").value, location: $("#pl").value, starts: $("#st").value, capacity: Number($("#cap").value) });
+    await refresh(); squad(); toast(r.invited ? `Invited ${r.invited} friend${r.invited === 1 ? "" : "s"}` : "Nobody's free or sharing free/busy yet");
+  }) };
+  app.querySelectorAll("[data-ans]").forEach(b => b.onclick = () => run(b, async () => { await api("/api/squad/answer", { plan_id: b.dataset.p, accept: b.dataset.ans === "1" }); await refresh(); squad() }));
+  app.querySelectorAll("[data-confirm]").forEach(b => b.onclick = () => run(b, async () => { await api("/api/squad/confirm", { plan_id: b.dataset.confirm }); await refresh(); squad(); toast("Plan confirmed. Meeting spots sent.") }));
+}
+
+// ---------------------------------------------------------------- my agent
+function describe(m) {
+  const t = m.type, f = m.fields || {}, o = m.other, sent = m.direction === "sent";
+  const title = f.listing ? `"${f.listing.title}"` : f.event_title ? `"${f.event_title}"` : "";
+  if (m.result !== "delivered") return sent ? `Your agent's ${t.toLowerCase().replace(/_/g, " ")} to ${o} was blocked` : `Blocked a message from ${o}'s agent`;
+  return ({
+    OPPORTUNITY_RELAY: sent ? `Shared ${title} with ${o}` : `Got ${title} from ${o}'s agent`,
+    VERIFY_REQUEST: sent ? `Asked ${o}'s agent to check a link` : `${o}'s agent asked you to check ${title}`,
+    VERIFY_RESULT: sent ? `Checked a link for ${o}: ${f.status}` : `${o}'s agent checked your link: ${f.status}`,
+    AVAILABILITY_QUERY: sent ? `Asked ${o} if they're free for ${title}` : `${o}'s agent asked if you're free for ${title}`,
+    AVAILABILITY_REPLY: sent ? `Told ${o} you're "${f.status}"` : `${o} is ${f.status}${f.distance ? ", " + f.distance : ""}`,
+    PLAN_INVITE: sent ? `Invited ${o} to ${title}` : `${o} invited you to ${title}`,
+    PLAN_REPLY: sent ? `Told ${o}: ${f.answer}` : `${o} said ${f.answer === "accept" ? "yes" : "no"}`,
+    PLAN_UPDATE: sent ? `Sent ${o} a plan update: ${f.state}` : `Plan update from ${o}: ${f.state}`,
+  })[t] || t;
+}
+async function agent() {
+  const tl = (await api("/api/timeline")).messages;
+  const today = tl.filter(m => Date.now() / 1000 - m.ts < 86400);
+  const s = ME.settings || {};
+  app.innerHTML = `<div class="stack"><div class="row between"><h1>My agent</h1><div class="status"><span class="dotgreen"></span>On</div></div>
+    <p class="muted">Everything your agent did, newest first. Tap any line to see exactly what was shared.</p>
+    <div class="stats"><div class="stat"><b>${today.length}</b>today</div><div class="stat"><b>${today.filter(m => m.result === "delivered").length}</b>sent or got</div><div class="stat"><b>${today.filter(m => m.result !== "delivered").length}</b>blocked</div></div>
+    <div class="card" style="gap: 14px">${tl.length ? tl.slice(0, 40).map((m, i) => `<button type="button" data-i="${i}" class="tl" style="background: none; border: 0; padding: 0; text-align: left; cursor: pointer">
+        <span class="ic ${m.result === "delivered" ? "" : "bad"}">${m.result === "delivered" ? (m.direction === "sent" ? I.arrow : I.check) : I.x}</span>
+        <span><b>${esc(describe(m))}</b><br><span class="hint">${esc(m.when)} · ${m.result === "delivered" ? (m.direction === "sent" ? "Sent" : "Received") : "Blocked: " + esc(m.reason)}</span></span></button>`).join("")
+      : `<p class="muted">Nothing yet. Add friends or share a find to see your agent work.</p>`}</div>
+    ${ME.activity.length ? `<div class="card"><b>Notes from your agent</b>${ME.activity.slice(0, 6).map(a => `<p class="${a.kind === "warn" ? "err" : "muted"}" style="font-size: 14px">${esc(a.text)}</p>`).join("")}</div>` : ""}
+    <a class="btn white block" href="#sources">Which sources my agent trusts</a>
+    <form class="card" id="settings" novalidate><b>About you (stays in your agent)</b>
+      <label class="lbl" for="zone">Where you usually are</label><select class="input" id="zone"><option value="">Not set</option>${["Tempe north", "Tempe south", "Downtown Phoenix"].map(z => `<option ${s.zone === z ? "selected" : ""}>${z}</option>`).join("")}</select>
+      <label class="lbl" for="interests">Interests</label><input class="input" id="interests" value="${esc((s.interests || []).join(", "))}" placeholder="research, free food, hackathons">
+      <label class="switch"><span>I have a car<small>So Squad can set up a carpool</small></span><input type="checkbox" id="car" ${s.has_car ? "checked" : ""}></label>
+      <label class="lbl" for="seats">Free seats</label><input class="input" id="seats" type="number" min="0" max="6" value="${s.seats || 0}">
+      <button class="btn small" type="submit">Save</button></form>
+    <button class="btn block danger" id="out" type="button">Sign out</button></div>`;
+  app.querySelectorAll("[data-i]").forEach(b => b.onclick = () => { const m = tl[b.dataset.i];
+    sheet(`<h2>${esc(describe(m))}</h2><p class="muted">${m.result === "delivered" ? "Exactly these fields crossed between the two agents:" : "The bus blocked this. Nothing crossed between the agents."}</p>
+      ${m.result === "delivered" ? `<div class="card" style="gap: 0">${Object.entries(m.fields).map(([k, v]) => `<div class="kv"><span>${esc(k.replace(/_/g, " "))}</span><span>${esc(typeof v === "object" && v ? (v.title || JSON.stringify(v)) : v ?? "none")}</span></div>`).join("")}</div>` : `<div class="note">Reason: ${esc(m.reason)}</div>`}
+      <button class="btn block" data-close type="button">Got it</button>`) });
+  $("#settings").onsubmit = e => { e.preventDefault(); run(e.submitter, async () => { await api("/api/settings", { zone: $("#zone").value, interests: $("#interests").value, has_car: $("#car").checked, seats: Number($("#seats").value) }); await refresh(); toast("Saved") }) };
+  $("#out").onclick = e => run(e.target, async () => { await api("/api/auth/logout", {}); ME = null; auth = { email: "", code: "" }; location.hash = ""; render() });
+}
+
+async function sources() {
+  const s = (await api("/api/trust")).sources;
+  const label = l => ({ trusted: ["ok", "Trusted"], flagged: ["bad", "Flagged"], checking: ["warn", "Checking"], unverified: ["", "New"] })[l] || ["", l];
+  app.innerHTML = `<div class="stack"><a href="#agent">← My agent</a><h1>Source trust</h1>
+    <p class="muted">Scores go up when finds check out and down when links die or get flagged. Your agent never shares from Flagged sources.</p>
+    ${s.map(x => { const [c, t] = label(x.label); return `<div class="card"><div class="row between"><b>${esc(x.source)}</b><span class="row" style="gap: 6px"><span class="chip ${c}">${t}</span><b style="font-family: var(--display); font-size: 20px">${x.score.toFixed(2)}</b></span></div>
+      <div class="meter ${esc(x.label)}"><i style="width: ${(x.score * 100).toFixed(0)}%"></i></div><span class="hint">${x.checks} check${x.checks === 1 ? "" : "s"}</span></div>` }).join("")}
+    <div class="card"><b>What the labels mean</b>
+      <div class="kv"><span><span class="chip ok">Trusted</span></span><span>Above 0.85. Shared without a second check.</span></div>
+      <div class="kv"><span><span class="chip warn">Checking</span></span><span>0.30 to 0.85. Two friends' agents must agree.</span></div>
+      <div class="kv" style="border: 0"><span><span class="chip bad">Flagged</span></span><span>Under 0.30. Never shared.</span></div>
+      <p class="hint">Score = (confirmed + 1) / (checks + 2). Older checks count 5% less each week.</p></div></div>`;
+}
+
+// ---------------------------------------------------------------- router
+async function render() {
+  clearInterval(poll);
+  try { await refresh() } catch (e) { return offline(e) }
+  if (!ME.signed_in) { $("#tabbar").hidden = true; return signIn() }
+  const r = route();
+  $("#tabbar").hidden = false;
+  $("#tabbar").innerHTML = NAV.map(([k, label, path]) => `<a href="#${k}" ${r === k || (r === "sources" && k === "agent") ? 'aria-current="page"' : ""}><span><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">${path}</svg></span>${label}</a>`).join("");
+  ({ feed, friends, share, squad, agent, sources })[r] ? await ({ feed, friends, share, squad, agent, sources })[r]() : feed();
+  window.scrollTo(0, 0);
+  if (r === "feed" || r === "friends" || r === "squad") poll = setInterval(async () => {
+    if (busy || $("#sheet").open || document.activeElement && ["INPUT", "SELECT"].includes(document.activeElement.tagName)) return;
+    const before = JSON.stringify([ME.feed.length, ME.requests.length, ME.plans]);
+    try { await refresh() } catch { return }
+    if (JSON.stringify([ME.feed.length, ME.requests.length, ME.plans]) !== before) ({ feed, friends, squad })[route()]?.();
+  }, 6000);
+}
+function offline(e) {
+  app.innerHTML = `<div class="stack" style="text-align: center; align-items: center; padding-top: 40px">${freebie("scan", 140)}<h1>Couldn't reach your agent</h1>
+    <p class="muted">${esc(e.message)}. Check your connection and try again. Nothing was shared while you were offline.</p><button class="btn" id="retry" type="button">Try again</button></div>`;
+  $("#retry").onclick = render;
+}
+window.addEventListener("hashchange", render);
+render();
+</script>
+</body>
+</html>

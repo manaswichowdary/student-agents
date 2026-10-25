@@ -21,14 +21,35 @@ other agents confirm the link still works, without either of you sharing your sc
 | **Dead-Link Detective** | Before anything is shared, 2 to 3 connections' agents check the link and deadline. At least 2 independent verifiers must agree. Each source gets a trust score that moves live |
 | **Freebie Squad** | Plan a group trip to a free event. Friends' agents answer only "free" or "busy" for that window and a near, medium or far bucket. A carpool if someone can drive, a walk if not |
 
+## The website
+
+`python server.py` serves two things:
+
+| Path | What it is |
+| --- | --- |
+| `/` | **The real website.** Anyone with an @asu.edu email signs in with a 6 digit code and gets their own agent. Friends, finds, plans and the agent's log are saved. Designed from our Freebie Radar Claude Design mockup, with Freebie the mascot |
+| `/demo` | The scripted demo: one page plays Maya, Dev and Sam side by side, with the live message log and a "Run demo scenario" button |
+
+**Trying it alone:** after signing in, tap **Add demo friends**. Maya, Dev and Sam are demo agents with no human
+behind them. They accept requests, verify links, share finds that fit you and say yes to plans, all through the
+same bus, consent and permission checks as real students.
+
+**Sign in codes:** with `RESEND_API_KEY` set, codes are emailed. Without it the site runs in demo mode and shows
+the code on screen, and says so. Students in the demo directory get their verified name from it; anyone else
+with an @asu.edu email enters a name, major and year, marked "self reported" (in production: ASU SSO).
+
 ## Run it
 
 ```bash
 pip install -r requirements.txt
-python server.py          # open http://localhost:8000 and press "Run demo scenario"
-python demo.py            # the same story in the terminal
-pytest -q                 # 37 tests
+python server.py          # open http://localhost:8000 (website) or /demo (scripted demo)
+python demo.py            # the scripted story in the terminal
+pytest -q                 # tests
 ```
+
+**Host it on Render (free):** New → Blueprint → pick this repo → Apply. `render.yaml` sets everything. Optional:
+add `RESEND_API_KEY` to email codes. On the free plan the disk resets when the service restarts, so accounts are
+cleared then; the demo friends come back automatically.
 
 No API key is needed. See [LLM calls](#llm-calls).
 
@@ -135,7 +156,7 @@ this link still open, given the evidence?). Both go through one `llm()` function
 | In this prototype | In production |
 | --- | --- |
 | Mock directory and codes shown on screen | ASU SSO (SAML or OAuth) |
-| One web page acting as all three students | Each student signs in and acts only as themselves, through Cubbie in iMessage or another chat app |
+| Codes shown on screen unless an email key is set; self reported profiles outside the demo directory | ASU SSO; profile from the directory |
 | Agent keys in memory, shared with the bus | Keys in a key management service; asymmetric signatures |
 | SQLite file | A hosted database with backups and per student encryption |
 | Mock web for link checks (`REAL_HTTP=1` for real requests) | Real fetches through a sandboxed fetcher with timeouts |
