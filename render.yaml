@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: student-agents
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: REAL_HTTP
+        value: "1"            # check real links that students share
+# Optional later: add RESEND_API_KEY under the service's Environment tab to email sign in codes.
