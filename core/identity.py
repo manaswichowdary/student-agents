@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import os
 import re
 import secrets
 from pathlib import Path
@@ -18,6 +19,7 @@ from .util import Clock
 CODE_TTL = 10 * 60
 MAX_ATTEMPTS = 5
 EDU = re.compile(r"^[a-z0-9._-]{2,40}@([a-z0-9-]+\.)*[a-z0-9-]+\.edu$")
+YEARS = {"freshman", "sophomore", "junior", "senior", "graduate"}
 
 
 class IdentityError(Exception):
@@ -32,13 +34,20 @@ def normalize(email: str) -> str:
 
 
 class Identity:
-    def __init__(self, store: Store, clock: Clock, directory: dict[str, dict]):
+    def __init__(self, store: Store, clock: Clock, directory: dict[str, dict], open_signup: bool = False):
         self.store, self.clock, self.directory = store, clock, directory
+        # open_signup: students outside the mock directory can join with a self reported profile.
+        # ALLOWED_DOMAINS limits which schools (default asu.edu).
+        self.open_signup = open_signup
+        self.domains = {d.strip() for d in os.environ.get("ALLOWED_DOMAINS", "asu.edu").split(",") if d.strip()}
         self.outbox: list[dict] = []      # mock email: the UI and demo read codes from here
 
     @classmethod
-    def from_file(cls, store: Store, clock: Clock, path: Path) -> "Identity":
-        return cls(store, clock, json.loads(path.read_text(encoding="utf-8")))
+    def from_file(cls, store: Store, clock: Clock, path: Path, open_signup: bool = False) -> "Identity":
+        return cls(store, clock, json.loads(path.read_text(encoding="utf-8")), open_signup)
+
+    def in_directory(self, email: str) -> bool:
+        return normalize(email) in self.directory
 
     @staticmethod
     def _hash(email: str, code: str) -> str:
@@ -50,14 +59,17 @@ class Identity:
         if not EDU.match(email):
             raise IdentityError("Use your school .edu email, like asurite@asu.edu")
         if email not in self.directory:
-            raise IdentityError("That ID isn't in the university directory")
+            if not self.open_signup:
+                raise IdentityError("That ID isn't in the university directory")
+            if email.split("@", 1)[1] not in self.domains:
+                raise IdentityError(f"Use your {' or '.join(sorted(self.domains))} email")
         code = f"{secrets.randbelow(1_000_000):06d}"
         self.store.x("INSERT OR REPLACE INTO codes VALUES (?,?,?,0)",
                      (email, self._hash(email, code), self.clock.now() + CODE_TTL))
         self.outbox.append({"to": email, "code": code, "ts": self.clock.now()})
         return email
 
-    def verify(self, email: str, code: str) -> dict:
+    def verify(self, email: str, code: str, name: str = "", major: str = "", year: str = "") -> dict:
         email = normalize(email)
         row = self.store.one("SELECT * FROM codes WHERE email=?", (email,))
         if not row:
@@ -69,11 +81,35 @@ class Identity:
         self.store.x("UPDATE codes SET attempts = attempts + 1 WHERE email=?", (email,))
         if not hmac.compare_digest(row["code_hash"], self._hash(email, (code or "").strip())):
             raise IdentityError("That code doesn't match")
-        person = self.directory[email]
-        self.store.x("INSERT OR REPLACE INTO accounts VALUES (?,?,?,?,?)",
-                     (email, person["name"], person["major"], person["year"], self.clock.now()))
+        if email in self.directory:
+            person, self_reported = self.directory[email], 0
+        else:
+            person, self_reported = self._self_reported(name, major, year), 1
+        self.store.x("INSERT OR REPLACE INTO accounts VALUES (?,?,?,?,?,?)",
+                     (email, person["name"], person["major"], person["year"], self.clock.now(), self_reported))
         self.store.x("DELETE FROM codes WHERE email=?", (email,))
         return self.account(email)
+
+    def check_code(self, email: str, code: str) -> None:
+        """Validate a code without using it (so a new student can then fill in their profile)."""
+        row = self.store.one("SELECT * FROM codes WHERE email=?", (normalize(email),))
+        if not row or row["attempts"] >= MAX_ATTEMPTS or self.clock.now() > row["expires"]:
+            raise IdentityError("That code expired. Ask for a new one")
+        if not hmac.compare_digest(row["code_hash"], self._hash(normalize(email), (code or "").strip())):
+            self.store.x("UPDATE codes SET attempts = attempts + 1 WHERE email=?", (normalize(email),))
+            raise IdentityError("That code doesn't match")
+
+    @staticmethod
+    def _self_reported(name: str, major: str, year: str) -> dict:
+        clean = lambda v: re.sub(r"\s+", " ", re.sub(r"[^\w .'&-]", "", v or "")).strip()[:60]  # noqa: E731
+        name, major, year = clean(name), clean(major), clean(year).lower()
+        if len(name.split()) < 2:
+            raise IdentityError("Add your first and last name")
+        if len(major) < 2:
+            raise IdentityError("Add your major")
+        if year not in YEARS:
+            raise IdentityError("Pick your class year")
+        return {"name": name.title() if name.islower() else name, "major": major, "year": year}
 
     def account(self, email: str) -> dict | None:
         row = self.store.one("SELECT * FROM accounts WHERE email=?", (normalize(email),))
@@ -83,5 +119,9 @@ class Identity:
         return self.account(email) is not None
 
     def profile(self, email: str) -> dict:
-        """Directory profile, used only inside the student's own agent."""
-        return self.directory[normalize(email)]
+        """Directory profile (or the self reported one), used only inside the student's own agent."""
+        email = normalize(email)
+        if email in self.directory:
+            return self.directory[email]
+        acc = self.account(email)
+        return {"name": acc["name"], "major": acc["major"], "year": acc["year"]}

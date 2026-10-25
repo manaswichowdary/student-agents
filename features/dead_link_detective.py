@@ -64,7 +64,7 @@ def check_url(world, verifier: str, url: str) -> dict:
     """Mock web by default. REAL_HTTP=1 does a real GET with a 5 second timeout."""
     if world.shared_fetch and url in world.fetch_cache:
         return world.fetch_cache[url]                 # same underlying check: counts once
-    if os.environ.get("REAL_HTTP") == "1":
+    if url not in world.web and os.environ.get("REAL_HTTP") == "1":
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "student-agents/0.1"})
             with urllib.request.urlopen(req, timeout=5) as r:

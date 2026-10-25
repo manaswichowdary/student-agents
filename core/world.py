@@ -1,6 +1,7 @@
 """Wires everything together: storage, clock, identity, connections, bus, trust and the agents."""
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Callable
 
@@ -17,11 +18,15 @@ DATA = Path(__file__).resolve().parent.parent / "data"
 
 
 class World:
-    def __init__(self, db: str = ":memory:", start: float = seed.DEMO_START, verify_background: bool = True):
+    def __init__(self, db: str = ":memory:", start: float | None = seed.DEMO_START, verify_background: bool = True,
+                 live: bool = False):
+        """live=True: the public website. Real clock, open sign up, state saved to the database file,
+        demo friends seeded once. live=False: the in memory demo and tests."""
         from features.dead_link_detective import TrustBook
+        self.live = live
         self.store = Store(db)
-        self.clock = Clock(start)
-        self.identity = Identity.from_file(self.store, self.clock, DATA / "directory.json")
+        self.clock = Clock(None if live else start)
+        self.identity = Identity.from_file(self.store, self.clock, DATA / "directory.json", open_signup=live)
         self.connections = Connections(self.store, self.clock, self.identity)
         self.bus = Bus(self.store, self.clock, self.identity, self.connections)
         self.trust = TrustBook(self.store, self.clock)
@@ -34,19 +39,50 @@ class World:
         self.bus.listeners.append(lambda row: self._emit({"kind": "message", **row}))
         self.connections.on_disconnect.append(self._on_disconnect)
         self._notices: list[tuple[str, str, dict]] = []
+        if live:
+            self._boot_live()
+            return
         for source, ts, ok in seed.trust_history(start):
             self.trust.record(source, ok, ts)
         if verify_background:
             for email in seed.BACKGROUND:
                 self.sign_up(email)
 
+    # ---------- the live website ----------
+    def _boot_live(self) -> None:
+        from features import demo_friends
+        seeded = self.store.one("SELECT value FROM meta WHERE key='seeded'")
+        for row in self.store.all("SELECT email FROM accounts"):
+            self._make_agent(row["email"])
+        if not seeded:
+            for source, ts, ok in seed.trust_history(self.clock.now()):
+                self.trust.record(source, ok, ts)
+            demo_friends.seed(self)
+            self.store.x("INSERT OR REPLACE INTO meta VALUES ('seeded', '1')")
+            self.save()
+
+    def _make_agent(self, email: str) -> StudentAgent:
+        agent = self.agents.get(email) or StudentAgent(self, email)
+        self.agents[email] = agent
+        row = self.store.one("SELECT state FROM agent_state WHERE email=?", (email,))
+        if row:
+            agent.load_state(json.loads(row["state"]))
+        return agent
+
+    def save(self) -> None:
+        for email, agent in self.agents.items():
+            self.store.x("INSERT OR REPLACE INTO agent_state VALUES (?,?)",
+                         (email, json.dumps(agent.to_state(), ensure_ascii=False)))
+
     # ---------- events shown in the live log (agent reasoning, not messages) ----------
     def event(self, kind: str, text: str, **extra) -> None:
         self._emit({"kind": "event", "event": kind, "text": text, "ts": self.clock.now(), **extra})
 
     def _emit(self, row: dict) -> None:
-        row["n"] = len(self.log) + 1
+        row["n"] = (self.log[-1]["n"] + 1) if self.log else 1
         self.log.append(row)
+        if self.live and len(self.log) > 1000:
+            del self.log[:500]
         for listen in self.listeners:
             listen(row)
 
@@ -54,11 +90,12 @@ class World:
     def start_signup(self, email: str) -> str:
         return self.identity.start(email)
 
-    def verify(self, email: str, code: str) -> dict:
-        acc = self.identity.verify(email, code)
+    def verify(self, email: str, code: str, name: str = "", major: str = "", year: str = "") -> dict:
+        acc = self.identity.verify(email, code, name, major, year)
         if acc["email"] not in self.agents:
-            self.agents[acc["email"]] = StudentAgent(self, acc["email"])
-        self.event("identity", f"{acc['name']} verified ({acc['email']}). Name comes from the directory.")
+            self._make_agent(acc["email"])
+        how = "self reported profile" if acc.get("self_reported") else "name comes from the directory"
+        self.event("identity", f"{acc['name']} verified ({acc['email']}), {how}.")
         return acc
 
     def sign_up(self, email: str) -> dict:

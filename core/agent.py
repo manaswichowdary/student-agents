@@ -20,6 +20,7 @@ class StudentAgent:
         acc = world.identity.account(email)
         self.name = acc["name"]
         self.first = self.name.split()[0]
+        self.settings: dict = {}                       # the student's own choices: campus, car, interests
         self.profile = {**world.identity.profile(email), **world.private_profiles.get(email, {})}
         self.feed: list[dict] = []                    # what the owner sees on their phone
         self.activity: deque = deque(maxlen=40)        # short notes for the owner
@@ -32,6 +33,29 @@ class StudentAgent:
         self.plans: dict[str, dict] = {}              # plans this agent started
         self.invites: dict[str, dict] = {}            # plans this agent was invited to
         world.bus.register(email, self.key, self.handle)
+
+    # ---------- saving and loading (so a restart doesn't lose a student's feed or plans) ----------
+    SAVED = ("feed", "seen", "my_finds", "relay_times", "relay_queue", "plans", "invites", "activity", "settings")
+
+    def to_state(self) -> dict:
+        out = {}
+        for k in self.SAVED:
+            v = getattr(self, k)
+            out[k] = sorted(v) if isinstance(v, set) else list(v) if isinstance(v, deque) else v
+        return out
+
+    def load_state(self, data: dict) -> None:
+        for k in self.SAVED:
+            if k not in data:
+                continue
+            cur = getattr(self, k)
+            if isinstance(cur, set):
+                setattr(self, k, set(data[k]))
+            elif isinstance(cur, deque):
+                setattr(self, k, deque(data[k], maxlen=cur.maxlen))
+            else:
+                setattr(self, k, data[k])
+        self.profile.update(self.settings)
 
     def note(self, text: str, kind: str = "info") -> None:
         self.activity.appendleft({"ts": self.world.clock.now(), "text": text, "kind": kind})

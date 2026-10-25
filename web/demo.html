@@ -152,7 +152,7 @@ const $ = id => document.getElementById(id);
 const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const first = e => names[e] || String(e || "").split("@")[0];
 async function api(path, body) {
-  const r = await fetch(path, { method: body ? "POST" : "GET", headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
+  const r = await fetch("/demo" + path, { method: body ? "POST" : "GET", headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.detail || "Something went wrong");
   return j;
@@ -309,7 +309,7 @@ $("reset").onclick = async () => { await api("/api/reset", {}); Object.values(fo
 $("digest").onclick = async () => { await api("/api/digest", {}); refresh() };
 
 function connect() {
-  const ws = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws");
+  const ws = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/demo/ws");
   ws.onmessage = soon;
   ws.onclose = () => setTimeout(connect, 1500);
 }

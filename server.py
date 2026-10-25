@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""FastAPI backend and live log for the Student Agents demo.
+"""FastAPI server.
 
   pip install -r requirements.txt && python server.py      then open http://localhost:8000
 
-Prototype note: the web page plays all three students at once, so requests say which student is acting. In
-production each student signs in with ASU SSO and only acts as themselves.
+  /        the real website: each student signs in and acts only as themselves (live.py)
+  /demo    the scripted demo: one page plays Maya, Dev and Sam side by side
 """
 from __future__ import annotations
 
@@ -26,7 +26,10 @@ from features import freebie_squad as squad
 from features import opportunity_relay as relay
 
 ROOT = Path(__file__).resolve().parent
+from fastapi import APIRouter
+
 app = FastAPI(title="Student Agents")
+demo_api = APIRouter(prefix="/demo")
 clients: set[asyncio.Queue] = set()
 state: dict = {}
 
@@ -72,12 +75,12 @@ def phone(email: str) -> dict:
     return {"verified": False, "email": email, "code_sent": bool(pending), "mock_code": pending["code"] if pending else None}
 
 
-@app.get("/")
-def index():
-    return FileResponse(ROOT / "web" / "index.html")
+@demo_api.get("")
+def demo_page():
+    return FileResponse(ROOT / "web" / "demo.html")
 
 
-@app.get("/api/state")
+@demo_api.get("/api/state")
 def get_state():
     world = W()
     return {"clock": fmt_time(world.clock.now()), "running": state["running"],
@@ -87,47 +90,47 @@ def get_state():
             "names": {e: a.first for e, a in world.agents.items()}}
 
 
-@app.post("/api/signup")
+@demo_api.post("/api/signup")
 def signup(b: Body):
     return {"email": guard(lambda: W().start_signup(b.email))}
 
 
-@app.post("/api/verify")
+@demo_api.post("/api/verify")
 def verify(b: Body):
     return guard(lambda: W().verify(b.email, b.code))
 
 
-@app.post("/api/connect")
+@demo_api.post("/api/connect")
 def connect(b: Body):
     return {"message": guard(lambda: W().connections.request(b.user, b.target))}
 
 
-@app.post("/api/accept")
+@demo_api.post("/api/accept")
 def accept(b: Body):
     guard(lambda: W().connections.accept(b.user, b.other))
     W().event("connection", f"{W().agent(b.user).first} accepted a request")
     return {"ok": True}
 
 
-@app.post("/api/deny")
+@demo_api.post("/api/deny")
 def deny(b: Body):
     guard(lambda: W().connections.deny(b.user, b.other))
     return {"ok": True}
 
 
-@app.post("/api/remove")
+@demo_api.post("/api/remove")
 async def remove(b: Body):
     await W().end_connection(normalize(b.user), normalize(b.other))
     return {"ok": True}
 
 
-@app.post("/api/block")
+@demo_api.post("/api/block")
 async def block(b: Body):
     await W().end_connection(normalize(b.user), normalize(b.other), block=True)
     return {"ok": True}
 
 
-@app.post("/api/perm")
+@demo_api.post("/api/perm")
 def perm(b: Body):
     guard(lambda: W().connections.set_perm(b.user, b.other, b.perm, b.value))
     W().event("permission", f"{W().agent(b.user).first} turned {'on' if b.value else 'off'} "
@@ -135,7 +138,7 @@ def perm(b: Body):
     return {"ok": True}
 
 
-@app.post("/api/find")
+@demo_api.post("/api/find")
 async def find(b: Body):
     raw = seed.LISTINGS.get(b.listing)
     if not raw:
@@ -143,30 +146,30 @@ async def find(b: Body):
     return {"result": await relay.find(W().agent(b.user), raw)}
 
 
-@app.post("/api/squad")
+@demo_api.post("/api/squad")
 async def start_squad(b: Body):
     plan = await squad.start(W().agent(b.user), seed.EVENTS["diwali"])
     return {"plan": plan["id"]}
 
 
-@app.post("/api/plan/answer")
+@demo_api.post("/api/plan/answer")
 async def plan_answer(b: Body):
     ok, reason = await squad.answer(W().agent(b.user), b.plan_id, b.accept)
     return {"ok": ok, "reason": reason}
 
 
-@app.post("/api/plan/confirm")
+@demo_api.post("/api/plan/confirm")
 async def plan_confirm(b: Body):
     plan = await squad.confirm(W().agent(b.user), b.plan_id)
     return {"state": plan["state"]}
 
 
-@app.post("/api/digest")
+@demo_api.post("/api/digest")
 async def digest():
     return {"sent": await W().digest()}
 
 
-@app.post("/api/reset")
+@demo_api.post("/api/reset")
 def reset():
     fresh()
     for q in list(clients):
@@ -174,7 +177,7 @@ def reset():
     return {"ok": True}
 
 
-@app.post("/api/demo")
+@demo_api.post("/api/demo")
 async def demo():
     if state["running"]:
         return {"ok": False}
@@ -192,7 +195,7 @@ async def demo():
     return {"ok": True}
 
 
-@app.websocket("/ws")
+@demo_api.websocket("/ws")
 async def ws(socket: WebSocket):
     await socket.accept()
     q: asyncio.Queue = asyncio.Queue()
@@ -206,5 +209,12 @@ async def ws(socket: WebSocket):
         clients.discard(q)
 
 
+app.include_router(demo_api)
+
+from live import router as live_router  # noqa: E402
+
+app.include_router(live_router)
+
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)), proxy_headers=True,
+                forwarded_allow_ips="*")

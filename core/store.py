@@ -7,7 +7,10 @@ import threading
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, name TEXT, major TEXT, year TEXT,
-  verified_at REAL);
+  verified_at REAL, self_reported INTEGER DEFAULT 0);
+CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, email TEXT, created REAL);
+CREATE TABLE IF NOT EXISTS agent_state (email TEXT PRIMARY KEY, state TEXT);
+CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
 CREATE TABLE IF NOT EXISTS codes (email TEXT PRIMARY KEY, code_hash TEXT, expires REAL, attempts INTEGER);
 CREATE TABLE IF NOT EXISTS connections (a TEXT, b TEXT, state TEXT, requested_by TEXT, created REAL,
   updated REAL, blocked_by TEXT, PRIMARY KEY (a, b));
