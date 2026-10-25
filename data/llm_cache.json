@@ -1,0 +1,7 @@
+{
+ "ea708fd1fcfb1fbb4df1905301aa2d0f552031071b6e282ad808418d4e33ca20": "{\"status\": \"closed\", \"reason\": \"The link returns a 404, so the listing has been taken down.\"}",
+ "70e4ac33ef2f6beaa48bd52eaa184a11434971a51f7647f87f45b34ab7a1959c": "{\"status\": \"open\", \"reason\": \"The page loads, the deadline is still ahead, and nothing says it is full.\"}",
+ "2a8d4c6b3ee9d089ffacb84d5bd66301ce8429c5b03aff35c7c798875beb1602": "{\"score\": 0.15, \"reason\": \"It is aimed at psychology research, not your CS major or interests.\"}",
+ "61de3ac3f146fa227b2f695de31b36f30a960940d1651445d614162c6260fbcb": "{\"score\": 0.92, \"reason\": \"A paid psychology study that matches your major and your interest in research.\"}",
+ "60e5ee77d4e49c1e6c1a8b3002b141982808c7f14ebe95047957b165f24a8b79": "{\"score\": 0.3, \"reason\": \"It is a psychology study, so biology and pre-med are only a loose fit.\"}"
+}
