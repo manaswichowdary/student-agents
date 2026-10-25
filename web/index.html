@@ -34,14 +34,76 @@ p { margin: 0 }
 .muted { color: var(--muted) }
 :focus-visible { outline: 3px solid var(--link); outline-offset: 2px }
 
-.layout { display: grid; grid-template-columns: minmax(0, 1fr); min-height: 100vh }
-@media (min-width: 980px) { .layout { grid-template-columns: minmax(0, 1fr) 480px minmax(0, 1fr) } .side { display: flex !important } }
-.side { display: none; grid-column: 1; padding: 40px 32px; flex-direction: column; gap: 18px; justify-content: center; max-width: 440px; justify-self: end }
-.side h2 { font-size: 30px }
-.side .card { padding: 16px }
-.app { grid-column: 1; width: 100%; max-width: 480px; overflow-x: clip; justify-self: center; position: relative; min-height: 100vh;
+.shell { max-width: 1440px; margin: 0 auto; min-height: 100vh;
   padding: 22px max(20px, env(safe-area-inset-right, 0px)) 120px max(20px, env(safe-area-inset-left, 0px)) }
-@media (min-width: 980px) { .app { grid-column: 2; border-left: 3px solid var(--ink); border-right: 3px solid var(--ink); background-color: var(--ground) } }
+.app { width: 100%; max-width: 520px; margin: 0 auto; min-width: 0 }
+.topbar, .sidenav, .rail { display: none }
+@media (min-width: 1100px) { body.in .mobile-only { display: none !important } }
+@media (min-width: 1100px) {
+  .shell.in { display: grid; grid-template-columns: 230px minmax(0, 1fr) 320px; gap: 28px; padding: 28px 32px 48px; align-items: start }
+  .shell.in .app { max-width: none; margin: 0 }
+  .shell.in .sidenav { display: flex; flex-direction: column; gap: 6px; position: sticky; top: 24px }
+  .shell.in .rail { display: flex; flex-direction: column; gap: 24px }
+  body.in .topbar { display: block }
+  body.in nav.tabbar { display: none !important }
+  .feedgrid { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px !important; align-items: start }
+  .feedgrid > .wide { grid-column: 1 / -1 }
+  .authcard { background: var(--paper); border: 3px solid var(--ink); border-radius: 32px; box-shadow: 8px 9px 0 var(--ink); padding: 40px }
+}
+@media (min-width: 1100px) and (max-width: 1280px) { .shell.in { grid-template-columns: 200px minmax(0, 1fr) } .shell.in .rail { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) } }
+.topbar { background: var(--navbg); border-bottom: 3px solid var(--ink) }
+.topbar .in { max-width: 1440px; margin: 0 auto; padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; gap: 20px }
+.logo { width: 44px; height: 44px; border: 3px solid var(--ink); border-radius: 14px; background: var(--yellow); display: flex; align-items: center; justify-content: center; flex: none }
+.sidenav a { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 14px; border-radius: 16px; border: 3px solid transparent; color: var(--ink); text-decoration: none; font-size: 16px; font-weight: 800 }
+.sidenav a:hover { background: var(--paper); border-color: var(--ink) }
+.sidenav a[aria-current="page"] { background: var(--blue-soft); border-color: var(--ink); box-shadow: 0 4px 0 var(--ink) }
+.rail section { background: var(--paper); border: 3px solid var(--ink); border-radius: 24px; box-shadow: 5px 6px 0 var(--ink); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px }
+
+/* the signed out hero: Freebie hops in on wide screens, finds float around */
+.hero { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px }
+.hero h1 { font-size: clamp(34px, 5vw, 60px); letter-spacing: -.5px; line-height: 1.04 }
+.hero .lead { font-size: clamp(17px, 1.6vw, 20px); color: var(--muted); max-width: 620px }
+.stage { position: relative; width: 300px; height: 250px; max-width: 100% }
+.stage .blob { position: absolute; left: 20px; top: 40px; width: 260px; height: 200px; border-radius: 48% 52% 45% 55% / 55% 45% 55% 45%; background: var(--blue-soft) }
+.stage .who { position: absolute; left: 60px; top: 10px }
+.bubble { position: absolute; background: var(--pink-soft); border: 3px solid var(--ink); border-radius: 22px 22px 22px 8px; box-shadow: 0 4px 0 var(--ink);
+  padding: 6px 14px; font-family: var(--display); font-size: 20px; white-space: nowrap; right: -6px; top: 0 }
+.bubble2 { display: none }
+.stickers { display: none }
+.sticker { position: absolute; width: 220px; text-align: left; background: var(--paper); border: 3px solid var(--ink); border-radius: 22px; box-shadow: 5px 6px 0 var(--ink); overflow: hidden }
+.sticker b { display: block; padding: 7px 14px; border-bottom: 3px solid var(--ink); font-size: 13px }
+.sticker span { display: block; padding: 10px 14px; font-family: var(--display); font-size: 18px }
+.signform { width: 100%; max-width: 560px; text-align: left }
+@media (min-width: 900px) {
+  .stage { width: 520px; height: 340px }
+  .stage .blob { left: 70px; top: 70px; width: 380px; height: 260px }
+  .stage .who { left: 165px; top: 40px }
+  .bubble { left: 340px; right: auto; font-size: 26px; padding: 10px 20px }
+  .bubble2 { display: block; position: absolute; left: 360px; top: 74px; width: 230px; text-align: left; background: var(--paper); border: 3px solid var(--ink);
+    border-radius: 8px 26px 26px 26px; box-shadow: 0 5px 0 var(--ink); padding: 12px 16px; font-size: 16px; font-weight: 800; line-height: 1.35 }
+  .signform { background: var(--paper); border: 3px solid var(--ink); border-radius: 28px; box-shadow: 6px 7px 0 var(--ink); padding: 20px 22px }
+  .signform .row { flex-wrap: wrap } .signform .input { flex: 1 1 260px }
+  .shell.out .app { max-width: 1100px }
+}
+@media (min-width: 1240px) { .stickers { display: block } }
+
+/* motion: things rise in when a screen opens, Freebie bobs, buttons lift on hover */
+@keyframes rise { from { opacity: 0; transform: translateY(24px) } to { opacity: 1; transform: none } }
+@keyframes bob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }
+@keyframes pop { from { opacity: 0; transform: scale(.4) } to { opacity: 1; transform: none } }
+@keyframes hopx { from { transform: translateX(-900px) } to { transform: none } }
+@keyframes hopy { 0% { transform: translateY(0) } 16% { transform: translateY(-160px) rotate(-10deg) } 33% { transform: translateY(0) scale(1.08, .9) }
+  50% { transform: translateY(-110px) rotate(-6deg) } 66% { transform: translateY(0) scale(1.06, .92) } 83% { transform: translateY(-50px) } 100% { transform: translateY(0) } }
+@keyframes wave { from { transform: rotate(-14deg) } to { transform: rotate(24deg) } }
+.anim > .stack > *, .anim .feedgrid > * { animation: rise .55s cubic-bezier(.2, .8, .2, 1) both }
+.anim > .stack > *:nth-child(2), .anim .feedgrid > *:nth-child(2) { animation-delay: .08s } .anim > .stack > *:nth-child(3), .anim .feedgrid > *:nth-child(3) { animation-delay: .16s }
+.anim > .stack > *:nth-child(4), .anim .feedgrid > *:nth-child(4) { animation-delay: .24s } .anim > .stack > *:nth-child(5), .anim .feedgrid > *:nth-child(5) { animation-delay: .32s }
+.anim > .stack > *:nth-child(n+6), .anim .feedgrid > *:nth-child(n+6) { animation-delay: .4s }
+.mascot { animation: bob 1.4s ease-in-out infinite }
+.pop { animation: pop .55s cubic-bezier(.3, 1.6, .5, 1) both }
+@media (min-width: 900px) { .hopx { animation: hopx 1.8s cubic-bezier(.3, .6, .4, 1) .2s both } .hopy { animation: hopy 1.8s linear .2s both } .hopx .mascot { animation-delay: 2s } }
+.btn { transition: transform .15s ease } .btn:hover { transform: translateY(-2px) }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important } }
 .stack { display: flex; flex-direction: column; gap: 14px; min-width: 0 }
 .stack > *, .row > * { min-width: 0 }
 .row > .btn, .row > .chip, .row > .avatar, .row > .status { flex: none }
@@ -120,7 +182,6 @@ textarea.input { padding: 12px 16px }
 
 nav.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--navbg); border-top: 3px solid var(--ink);
   display: flex; justify-content: space-around; padding: 8px max(8px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)) }
-@media (min-width: 980px) { nav.tabbar { left: 50%; right: auto; width: 480px; transform: translateX(-50%); border-left: 3px solid var(--ink); border-right: 3px solid var(--ink) } }
 nav.tabbar a { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 60px; min-height: 48px; color: var(--muted); text-decoration: none; font-size: 12px; font-weight: 800 }
 nav.tabbar a span { display: flex; padding: 3px 14px; border-radius: 999px }
 nav.tabbar a[aria-current="page"] { color: var(--link) } nav.tabbar a[aria-current="page"] span { background: var(--blue-soft) }
@@ -138,15 +199,11 @@ dialog.sheet .in { padding: 12px 20px calc(24px + env(safe-area-inset-bottom, 0p
 </style>
 </head>
 <body>
-<div class="layout">
-  <aside class="side" aria-label="About">
-    <div class="brand" id="sideBrand"></div>
-    <h2>Your agent finds it. <span style="color: var(--link)">Your friends get it.</span></h2>
-    <p class="muted">Every student gets a personal agent. Agents pass free food, paid studies, scholarships and hidden opportunities to friends they fit, only after both students say yes.</p>
-    <div class="card"><b>Try it alone</b><span class="muted">Sign in, then tap "Add demo friends". Maya, Dev and Sam are demo agents: they accept requests, check links, share finds and join plans.</span></div>
-    <p class="hint">Built for the Cubbie Hackathon, Track 2. <a href="/demo">See the 3 phone demo</a></p>
-  </aside>
+<header class="topbar" id="topbar"></header>
+<div class="shell out" id="shell">
+  <nav class="sidenav" id="sidenav" aria-label="Main"></nav>
   <main class="app" id="app" aria-live="polite"></main>
+  <aside class="rail" id="rail" aria-label="Today"></aside>
 </div>
 <nav class="tabbar" id="tabbar" aria-label="Main" hidden></nav>
 <dialog class="sheet" id="sheet"><div class="in" id="sheetBody"></div></dialog>
@@ -195,7 +252,7 @@ const NAV = [
   ["squad", "Squad", '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" stroke-linejoin="round"/><circle cx="12" cy="9.5" r="2.5"/>'],
   ["agent", "My agent", '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12l6-6"/>'],
 ];
-$("#sideBrand").innerHTML = `${I.radar}<div>Student Agents<small>by Freebie Radar</small></div>`;
+
 
 // ---------------------------------------------------------------- helpers
 async function api(path, body) {
@@ -223,22 +280,33 @@ async function refresh() { ME = await api("/api/me") }
 
 // ---------------------------------------------------------------- sign in
 function signIn() {
-  app.innerHTML = `<div class="stack" style="min-height: calc(100vh - 60px)">
-    <div class="brand">${I.radar}<div>Student Agents<small>by Freebie Radar</small></div></div>
-    <div style="position: relative; margin: 10px auto 0; width: 240px; height: 220px">
-      <div style="position: absolute; left: -10px; top: 30px; width: 260px; height: 190px; border-radius: 48% 52% 45% 55% / 55% 45% 55% 45%; background: var(--blue-soft)"></div>
-      <div style="position: absolute; left: 30px; top: 0">${freebie("wave", 180)}</div>
-      <div style="position: absolute; right: -18px; top: 6px; background: #fff; border: 3px solid var(--ink); border-radius: 18px; padding: 6px 12px; font-size: 14px; font-weight: 800; box-shadow: 0 4px 0 var(--ink)">hi bestie!</div>
-    </div>
-    <h1 style="text-align: center; font-size: 36px">Your agent finds it.<br><span style="color: var(--link)">Your friends get it.</span></h1>
-    <p class="muted" style="text-align: center; font-size: 17px">Nobody sees your schedule. Free food, paid studies and scholarships, shared only with friends you pick.</p>
-    <form id="f" class="stack" style="margin-top: auto" novalidate>
-      <label class="lbl" for="email">School email (.edu)</label>
-      <input class="input" id="email" type="email" autocomplete="email" placeholder="you@school.edu" value="${esc(auth.email)}" required>
-      <p class="hint">Any .edu email. We'll send you a 6 digit code. ASU students also get free food from SunDevilCentral.</p>
-      <p class="err" id="err" role="alert"></p>
-      <button class="btn block" type="submit">Send code</button>
-    </form></div>`;
+  const sticker = (bg, tag, text, pos, delay, rot) => `<div class="sticker pop" style="${pos}; transform: rotate(${rot}deg); animation-delay: ${delay}s"><b style="background: ${bg}">${tag}</b><span>${text}</span></div>`;
+  app.innerHTML = `<div class="stack" style="gap: 22px">
+    <div class="row between"><div class="row" style="gap: 10px"><span class="logo">${I.radar}</span><div class="brand" style="font-size: 22px">Student Agents<small>by Freebie Radar</small></div></div>
+      <button class="linkbtn" type="button" id="privacy">How your privacy works</button></div>
+    <section class="hero">
+      <div class="stickers" aria-hidden="true">
+        ${sticker("#FF8FB1", "FREE FOOD · TONIGHT", "Pizza at Hack Night", "right: calc(50% + 310px); top: 120px", 2.1, -7)}
+        ${sticker("#8FD18B", "PAID STUDY", "$30 for 45 min", "left: calc(50% + 370px); top: 180px", 2.25, 6)}
+        ${sticker("#FFD25A", "HIDDEN INTERNSHIP", "$6,000 stipend", "left: calc(50% + 340px); top: 400px", 2.4, -4)}
+        ${sticker("#9DB8F2", "SCHOLARSHIP", "Grad app fee waiver", "right: calc(50% + 340px); top: 350px", 2.55, 5)}
+      </div>
+      <div class="stage"><div class="blob"></div>
+        <div class="who hopx"><div class="hopy">${freebie("wave", 190)}</div></div>
+        <div class="bubble pop" style="animation-delay: 2.1s">hi bestie!!</div>
+        <div class="bubble2 pop" style="animation-delay: 2.6s">I'm Freebie. I find free food, paid studies and scholarships for you.</div>
+      </div>
+      <h1>Your agent finds it.<br><span style="color: var(--link)">Your friends get it.</span></h1>
+      <p class="lead">Nobody sees your schedule. Every student gets an agent that shares finds only with friends you pick.</p>
+      <form id="f" class="signform stack" style="gap: 10px" novalidate>
+        <label class="lbl" for="email">School email (.edu)</label>
+        <div class="row" style="flex-wrap: nowrap"><input class="input" id="email" type="email" autocomplete="email" placeholder="you@school.edu" value="${esc(auth.email)}" required>
+          <button class="btn" type="submit">Send code</button></div>
+        <p class="hint">Any .edu email. We'll send you a 6 digit code. ASU students also get free food from SunDevilCentral.</p>
+        <p class="err" id="err" role="alert"></p>
+      </form>
+    </section></div>`;
+  $("#privacy").onclick = privacySheet;
   $("#f").onsubmit = e => { e.preventDefault(); run(e.submitter, async () => {
     try {
       const r = await api("/api/auth/start", { email: $("#email").value });
@@ -247,9 +315,19 @@ function signIn() {
     } catch (err) { $("#err").textContent = err.message }
   }) };
 }
+function privacySheet() {
+  sheet(`<h2>How your privacy works</h2>
+    <div class="kv"><span>Connecting</span><span>Agents only talk after both students say yes. Requests never reveal who has an account.</span></div>
+    <div class="kv"><span>Sharing a find</span><span>Only the listing's own fields cross. Never your profile, schedule or location.</span></div>
+    <div class="kv"><span>Plans</span><span>Friends see only Free or Busy, and Near, Medium or Far. Pickup spots go only to confirmed members.</span></div>
+    <div class="kv"><span>Removing someone</span><span>Their agent is blocked right away and plans with them are cancelled.</span></div>
+    <div class="kv" style="border: 0"><span>Your log</span><span>Every message your agent sent, got or blocked is listed under My agent.</span></div>
+    <button class="btn block" data-close type="button">Got it</button>`);
+}
 
 function codeScreen() {
-  app.innerHTML = `<div class="stack" style="min-height: calc(100vh - 60px)">
+  app.classList.add("anim"); setTimeout(() => app.classList.remove("anim"), 1200);
+  app.innerHTML = `<div class="stack authcard" style="max-width: 560px; margin: 0 auto">
     <button class="btn white small" type="button" id="back" aria-label="Back" style="width: 48px; padding: 0; align-self: flex-start"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
     <div style="margin-top: 24px; width: 64px; height: 64px; border: 3px solid var(--ink); border-radius: 20px; background: var(--yellow); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 0 var(--ink)">${I.mail}</div>
     <h1>Check your email</h1>
@@ -278,7 +356,7 @@ function codeScreen() {
 }
 
 function profileScreen() {
-  app.innerHTML = `<div class="stack">
+  app.innerHTML = `<div class="stack authcard" style="max-width: 560px; margin: 0 auto">
     <div class="row">${freebie("wave", 70)}<h1 style="font-size: 30px">Almost there!</h1></div>
     <p class="muted">You're not in our demo directory, so tell your agent a little about you. It only uses this to match finds to you.</p>
     <form id="f" class="stack" novalidate>
@@ -299,10 +377,11 @@ function profileScreen() {
 }
 
 function welcome() {
+  chrome(false); app.classList.add("anim"); setTimeout(() => app.classList.remove("anim"), 1200);
   const src = ME.self_reported ? "From your sign up" : "From the ASU directory";
   const row = (k, v, last) => `<div class="kv" style="${last ? "border: 0" : ""}"><div><div class="muted" style="font-size: 13px">${k}</div><div style="font-size: 19px; font-weight: 800">${esc(v)}</div></div>${ME.self_reported ? "" : I.lock}</div>`;
   const promise = (bg, icon, text) => `<li class="row" style="flex-wrap: nowrap; align-items: flex-start"><span style="flex: none; width: 34px; height: 34px; border: 2px solid var(--ink); border-radius: 12px; background: ${bg}; display: flex; align-items: center; justify-content: center">${icon}</span>${text}</li>`;
-  app.innerHTML = `<div class="stack">
+  app.innerHTML = `<div class="stack authcard" style="max-width: 600px; margin: 0 auto">
     <div class="row" style="flex-wrap: nowrap">${freebie("cheer", 96)}<div class="stack" style="gap: 6px">
       <span class="chip ok">${I.check}${ME.self_reported ? "School email verified" : "ASU verified"}</span><h1>You're verified, ${esc(first(ME.name))}!</h1></div></div>
     <section class="card" style="padding: 0; overflow: hidden"><div class="row" style="padding: 12px 18px; background: var(--blue-soft); border-bottom: 3px solid var(--ink); font-size: 14px">${ME.self_reported ? "" : I.lock}${src}</div>
@@ -331,37 +410,39 @@ function feedCard(it, i) {
     <div class="why">${I.spark}${esc(it.why)}</div>
     <div class="row between" style="margin-top: 4px"><button class="linkbtn" type="button" data-shared="${i}">What was shared</button>
       <a class="btn small ${it.urgent ? "" : "white"}" href="${esc(it.url)}" target="_blank" rel="noopener noreferrer">Open link</a></div>`;
-  return it.urgent ? `<article class="card urgent"><div class="band">${I.clock}${it.type === "food" ? "Starts" : "Closes"} ${esc(it.closes)}</div><div class="inner">${body}</div></article>`
+  return it.urgent ? `<article class="card urgent wide"><div class="band">${I.clock}${it.type === "food" ? "Starts" : "Closes"} ${esc(it.closes)}</div><div class="inner">${body}</div></article>`
     : `<article class="card">${body}</article>`;
 }
 function feed() {
   const items = ME.feed.filter(it => filter === "all" || it.type === filter || (filter === "food" && it.type === "event"));
   const urgent = ME.feed.filter(i => i.urgent).length;
   const head = `<header class="stack" style="gap: 12px">
-    <div class="row between"><div class="muted">Hi ${esc(first(ME.name))}</div><div class="status"><span class="dotgreen"></span>Agent on</div></div>
+    <div class="row between mobile-only"><div class="muted">Hi ${esc(first(ME.name))}</div><div class="status"><span class="dotgreen"></span>Agent on</div></div>
     <h1 style="font-size: 36px">For you</h1>
     ${ME.can_scan && ME.feed.length ? `<div class="row between"><span class="hint">Your agent checks SunDevilCentral for free food every 30 min.</span><button class="btn small white" id="scan" type="button">Scan now</button></div>` : ""}
     ${ME.feed.length ? `<p class="muted">${ME.feed.length} find${ME.feed.length === 1 ? "" : "s"}${urgent ? ` · ${urgent} closing within a day` : ""}</p>
     <div class="tabs" role="group" aria-label="Filter">${FILTERS.map(([k, v]) => `<button type="button" data-f="${k}" aria-pressed="${filter === k}">${v}</button>`).join("")}</div>` : ""}
   </header>`;
-  const demoBox = ME.has_demo_friends ? `<div class="card" style="background: var(--blue-pale)"><b>Try it now</b><p class="muted">Ask a demo friend's agent to find something for you. Two agents check the link first, then it lands here if it fits you.</p>
-      <button class="btn small" id="demoFind" type="button">Ask a friend's agent for a find</button></div>` : "";
+  const demoBox = ME.has_demo_friends ? `<div class="card wide" style="background: var(--blue-pale)"><b>Try it now</b><p class="muted">Ask a demo friend's agent to find something for you. Two agents check the link first, then it lands here if it fits you.</p>
+      <button class="btn small" id="demoFind" type="button">Ask a friend's agent for a find</button></div>`
+    : `<div class="card wide" style="background: var(--blue-pale)"><b>See agents work together</b><p class="muted">Add Maya, Dev and Sam, three demo agents. They accept right away, check links and send you finds.</p>
+      <button class="btn small" id="addDemo" type="button">Add demo friends</button></div>`;
   if (!ME.feed.length) {
     app.innerHTML = `${head}<div class="stack" style="align-items: center; text-align: center; padding-top: 18px">
       <div style="position: relative; width: 260px; height: 230px"><div style="position: absolute; left: 10px; top: 10px; width: 240px; height: 220px; border-radius: 50%; border: 3px dashed #9DB8F2"></div>
         <div style="position: absolute; left: 50px; top: 18px">${freebie("scan", 160)}</div></div>
       <h2 style="font-size: 28px">Nothing yet.<br>Your agent is looking.</h2>
       <p class="muted">Friends' agents send you finds once you connect. Want to see it work right away? Add the demo friends.</p>
-      ${ME.has_demo_friends ? "" : `<button class="btn block" id="addDemo" type="button">Add demo friends (Maya, Dev, Sam)</button>`}
+      ${ME.has_demo_friends ? "" : `<button class="btn block" id="addDemoEmpty" type="button">Add demo friends (Maya, Dev, Sam)</button>`}
       ${ME.can_scan ? `<button class="btn block white" type="button" id="scan">Scan SunDevilCentral for free food</button>` : ""}
       <button class="btn block white" type="button" id="toFriends">Add a real friend</button>
-      <a href="#share">Share something you found</a></div>${demoBox ? `<div style="margin-top: 18px">${demoBox}</div>` : ""}`;
+      <a href="#share">Share something you found</a></div>${ME.has_demo_friends ? `<div style="margin-top: 18px">${demoBox}</div>` : ""}`;
   } else {
-    app.innerHTML = `${head}<div class="stack" style="gap: 18px; margin-top: 16px">${demoBox}${items.map((it) => feedCard(it, ME.feed.indexOf(it))).join("") || `<p class="muted">Nothing in this filter yet.</p>`}</div>`;
+    app.innerHTML = `${head}<div class="stack feedgrid" style="gap: 18px; margin-top: 16px">${demoBox}${items.map((it) => feedCard(it, ME.feed.indexOf(it))).join("") || `<p class="muted">Nothing in this filter yet.</p>`}</div>`;
   }
   app.querySelectorAll("[data-f]").forEach(b => b.onclick = () => { filter = b.dataset.f; feed() });
   app.querySelectorAll("[data-shared]").forEach(b => b.onclick = () => sharedSheet(ME.feed[b.dataset.shared]));
-  $("#addDemo") && ($("#addDemo").onclick = e => run(e.target, async () => { await api("/api/demo-friends", {}); await refresh(); toast("Maya, Dev and Sam accepted"); feed() }));
+  app.querySelectorAll("#addDemo, #addDemoEmpty").forEach(btn => btn.onclick = e => run(e.target, async () => { await api("/api/demo-friends", {}); await refresh(); toast("Maya, Dev and Sam accepted"); feed() }));
   $("#toFriends") && ($("#toFriends").onclick = () => go("friends"));
   $("#scan") && ($("#scan").onclick = e => run(e.target, async () => { const r = await api("/api/scan", {}); await refresh(); toast(r.message); feed() }));
   $("#demoFind") && ($("#demoFind").onclick = e => run(e.target, async () => { const r = await api("/api/demo-find", {}); await refresh(); toast(r.result); feed() }));
@@ -563,20 +644,55 @@ async function sources() {
 }
 
 // ---------------------------------------------------------------- router
+const SIDE = [["feed", "For you"], ["friends", "Friends"], ["share", "Share a find"], ["squad", "Freebie Squad"], ["agent", "My agent"], ["sources", "Source trust"]];
+const SIDE_ICON = { sources: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>' };
+function chrome(on) {
+  document.body.classList.toggle("in", on);
+  $("#shell").classList.toggle("in", on); $("#shell").classList.toggle("out", !on);
+  $("#tabbar").hidden = !on;
+  if (!on) { $("#sidenav").innerHTML = $("#rail").innerHTML = $("#topbar").innerHTML = ""; return }
+  const r = route();
+  const icon = k => SIDE_ICON[k] || (NAV.find(n => n[0] === k) || [])[2] || "";
+  const svg = k => `<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">${icon(k)}</svg>`;
+  $("#tabbar").innerHTML = NAV.map(([k, label]) => `<a href="#${k}" ${r === k || (r === "sources" && k === "agent") ? 'aria-current="page"' : ""}><span>${svg(k)}</span>${label}</a>`).join("");
+  $("#sidenav").innerHTML = SIDE.map(([k, label]) => `<a href="#${k}" ${r === k ? 'aria-current="page"' : ""}>${svg(k)}${label}</a>`).join("");
+  $("#topbar").innerHTML = `<div class="in"><div class="row" style="gap: 10px; flex-wrap: nowrap"><span class="logo">${I.radar}</span><div class="brand" style="font-size: 22px">Student Agents<small>by Freebie Radar</small></div>
+      <span class="muted" style="margin-left: 18px; font-size: 15px">Your agent finds it. Your friends get it. Nobody sees your schedule.</span></div>
+    <div class="row" style="gap: 14px; flex-wrap: nowrap"><div class="status"><span class="dotgreen"></span>Agent on</div>
+      <span class="avatar" style="width: 42px; height: 42px">${esc(initials(ME.name))}</span><div style="line-height: 1.2"><b>${esc(ME.name)}</b><div class="hint">${esc(ME.major)} · ${esc(ME.year)}</div></div></div></div>`;
+}
+async function rail() {
+  if (!document.body.classList.contains("in") || innerWidth < 1100) return;
+  let tl = [];
+  try { tl = (await api("/api/timeline")).messages.filter(m => Date.now() / 1000 - m.ts < 86400) } catch { }
+  const plan = ME.plans.find(p => ["invited", "proposed", "accepted", "confirmed"].includes(p.state));
+  const req = ME.requests[0];
+  $("#rail").innerHTML = `
+    <section style="background: var(--yellow)"><h2>Found something good?</h2><p>Your agent checks it, then sends it to friends who want it.</p><a class="btn small white" href="#share">Share a find</a></section>
+    <section><h2>Your agent today</h2><div class="stats"><div class="stat"><b>${tl.length}</b>actions</div><div class="stat"><b>${tl.filter(m => m.result === "delivered" && m.direction === "sent").length}</b>sent</div><div class="stat"><b>${tl.filter(m => m.result !== "delivered").length}</b>blocked</div></div>
+      ${tl[0] ? `<p class="hint">Latest: ${esc(describe(tl[0]))}</p>` : ""}<a href="#agent">See everything it did</a></section>
+    ${plan ? `<section><h2>Freebie Squad</h2><span class="chip warn">${esc(plan.state === "proposed" ? "Waiting on replies" : plan.state)}</span><b>${esc(plan.title)}</b><span class="hint">${esc(plan.starts_label)}${plan.location ? " · " + esc(plan.location) : ""}</span>${plan.meet ? `<b>${esc(plan.meet)}</b>` : ""}<a href="#squad">Open plan</a></section>` : ""}
+    ${req ? `<section><h2>Friend request</h2><div class="row" style="flex-wrap: nowrap"><span class="avatar" style="background: var(--pink-soft)">${esc(initials(req.name))}</span><div><b>${esc(req.name)}</b><div class="hint">${esc(req.major)} · ${esc(req.year)}</div></div></div>
+      <div class="row"><button class="btn small" data-rail="accept" data-o="${esc(req.from)}" type="button">Accept</button><button class="btn small white" data-rail="deny" data-o="${esc(req.from)}" type="button">Deny</button></div></section>` : ""}
+    <p class="hint" style="padding: 0 6px">Never shared: your profile, schedule and location.</p>`;
+  $("#rail").querySelectorAll("[data-rail]").forEach(b => b.onclick = () => run(b, async () => { await api("/api/friends/" + b.dataset.rail, { other: b.dataset.o }); await refresh(); render() }));
+}
 async function render() {
   clearInterval(poll);
-  try { await refresh() } catch (e) { return offline(e) }
-  if (!ME.signed_in) { $("#tabbar").hidden = true; return signIn() }
+  try { await refresh() } catch (e) { chrome(false); return offline(e) }
+  if (!ME.signed_in) { chrome(false); return signIn() }
   const r = route();
-  $("#tabbar").hidden = false;
-  $("#tabbar").innerHTML = NAV.map(([k, label, path]) => `<a href="#${k}" ${r === k || (r === "sources" && k === "agent") ? 'aria-current="page"' : ""}><span><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">${path}</svg></span>${label}</a>`).join("");
+  chrome(true);
+  app.classList.add("anim");
   ({ feed, friends, share, squad, agent, sources })[r] ? await ({ feed, friends, share, squad, agent, sources })[r]() : feed();
+  rail();
+  setTimeout(() => app.classList.remove("anim"), 1200);
   window.scrollTo(0, 0);
   if (r === "feed" || r === "friends" || r === "squad") poll = setInterval(async () => {
     if (busy || $("#sheet").open || document.activeElement && ["INPUT", "SELECT"].includes(document.activeElement.tagName)) return;
     const before = JSON.stringify([ME.feed.length, ME.requests.length, ME.plans]);
     try { await refresh() } catch { return }
-    if (JSON.stringify([ME.feed.length, ME.requests.length, ME.plans]) !== before) ({ feed, friends, squad })[route()]?.();
+    if (JSON.stringify([ME.feed.length, ME.requests.length, ME.plans]) !== before) { ({ feed, friends, squad })[route()]?.(); rail() }
   }, 6000);
 }
 function offline(e) {
