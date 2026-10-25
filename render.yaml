@@ -10,5 +10,4 @@ services:
         value: 3.11.9
       - key: REAL_HTTP
         value: "1"            # check real links that students share
-      - key: RESEND_API_KEY   # optional: paste a key from resend.com to email sign in codes
-        sync: false
+# Optional later: add RESEND_API_KEY under the service's Environment tab to email sign in codes.
