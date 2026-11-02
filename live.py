@@ -80,6 +80,16 @@ def home():
     return FileResponse(ROOT / "web" / "index.html")
 
 
+STATIC_FILES = {"app.js", "app.css", "demo.js", "demo.css"}   # only these files are served
+
+
+@router.get("/static/{name}")
+def static_file(name: str):
+    if name not in STATIC_FILES:
+        raise HTTPException(404, "Not found")
+    return FileResponse(ROOT / "web" / name)
+
+
 # ------------------------------------------------------------------------------------------ auth
 class Auth(BaseModel):
     email: str = ""

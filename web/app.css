@@ -1,0 +1,188 @@
+/* Freebie Radar look, from the team's mockup: peach dotted ground, ink outlines with offset
+   shadows, Fredoka for headings, Nunito for text, blue actions, yellow Freebie. One phone width column,
+   with a side panel on wide screens. */
+:root {
+  --ground: #FFF4EA; --dot: #FFDCE6; --ink: #1E1A16; --muted: #5E574B; --muted2: #4A4337; --paper: #ffffff;
+  --blue: #3366D6; --link: #2A5BC8; --blue-soft: #CFDDF5; --blue-pale: #EEF3FD; --yellow: #FFD25A; --yellow-soft: #FFF1C7;
+  --pink: #FF5C8A; --pink-soft: #FFE3EC; --green: #8FD18B; --green-soft: #E3F5E1; --green-ink: #1F7A3A;
+  --orange-ink: #B4410C; --line: #E6DCC8; --navbg: #FFFDF8; --red: #C2361B;
+  --display: "Fredoka", "Nunito", system-ui, sans-serif;
+  --body: "Nunito", system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+html, body { margin: 0; min-height: 100% }
+body { background-color: var(--ground); background-image: radial-gradient(var(--dot) 3px, transparent 3px);
+  background-size: 36px 36px; color: var(--ink); font: 700 16px/1.4 var(--body) }
+a { color: var(--link); font-weight: 800 } a:hover { color: #1F49A8 }
+button, input, select, textarea { font: inherit; color: inherit }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; margin: 0; text-wrap: balance }
+h1 { font-size: 34px; line-height: 1.08 }
+h2 { font-size: 22px; line-height: 1.15 }
+p { margin: 0 }
+.muted { color: var(--muted) }
+:focus-visible { outline: 3px solid var(--link); outline-offset: 2px }
+
+.shell { max-width: 1440px; margin: 0 auto; min-height: 100vh;
+  padding: 22px max(20px, env(safe-area-inset-right, 0px)) 120px max(20px, env(safe-area-inset-left, 0px)) }
+.app { width: 100%; max-width: 520px; margin: 0 auto; min-width: 0 }
+.topbar, .sidenav, .rail { display: none }
+@media (min-width: 1100px) { body.in .mobile-only { display: none !important } }
+@media (min-width: 1100px) {
+  .shell.in { display: grid; grid-template-columns: 230px minmax(0, 1fr) 320px; gap: 28px; padding: 28px 32px 48px; align-items: start }
+  .shell.in .app { max-width: none; margin: 0 }
+  .shell.in .sidenav { display: flex; flex-direction: column; gap: 6px; position: sticky; top: 24px }
+  .shell.in .rail { display: flex; flex-direction: column; gap: 24px }
+  body.in .topbar { display: block }
+  body.in nav.tabbar { display: none !important }
+  .feedgrid { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px !important; align-items: start }
+  .feedgrid > .wide { grid-column: 1 / -1 }
+  .authcard { background: var(--paper); border: 3px solid var(--ink); border-radius: 32px; box-shadow: 8px 9px 0 var(--ink); padding: 40px }
+}
+@media (min-width: 1100px) and (max-width: 1280px) { .shell.in { grid-template-columns: 200px minmax(0, 1fr) } .shell.in .rail { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) } }
+.topbar { background: var(--navbg); border-bottom: 3px solid var(--ink) }
+.topbar .in { max-width: 1440px; margin: 0 auto; padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; gap: 20px }
+.logo { width: 44px; height: 44px; border: 3px solid var(--ink); border-radius: 14px; background: var(--yellow); display: flex; align-items: center; justify-content: center; flex: none }
+.sidenav a { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 14px; border-radius: 16px; border: 3px solid transparent; color: var(--ink); text-decoration: none; font-size: 16px; font-weight: 800 }
+.sidenav a:hover { background: var(--paper); border-color: var(--ink) }
+.sidenav a[aria-current="page"] { background: var(--blue-soft); border-color: var(--ink); box-shadow: 0 4px 0 var(--ink) }
+.rail section { background: var(--paper); border: 3px solid var(--ink); border-radius: 24px; box-shadow: 5px 6px 0 var(--ink); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px }
+
+/* the signed out hero: Freebie hops in on wide screens, finds float around */
+.hero { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px }
+.hero h1 { font-size: clamp(34px, 5vw, 60px); letter-spacing: -.5px; line-height: 1.04 }
+.hero .lead { font-size: clamp(17px, 1.6vw, 20px); color: var(--muted); max-width: 620px }
+.stage { position: relative; width: 300px; height: 250px; max-width: 100% }
+.stage .blob { position: absolute; left: 20px; top: 40px; width: 260px; height: 200px; border-radius: 48% 52% 45% 55% / 55% 45% 55% 45%; background: var(--blue-soft) }
+.stage .who { position: absolute; left: 60px; top: 10px }
+.bubble { position: absolute; background: var(--pink-soft); border: 3px solid var(--ink); border-radius: 22px 22px 22px 8px; box-shadow: 0 4px 0 var(--ink);
+  padding: 6px 14px; font-family: var(--display); font-size: 20px; white-space: nowrap; right: -6px; top: 0 }
+.bubble2 { display: none }
+.stickers { display: none }
+.sticker { position: absolute; width: 220px; text-align: left; background: var(--paper); border: 3px solid var(--ink); border-radius: 22px; box-shadow: 5px 6px 0 var(--ink); overflow: hidden }
+.sticker b { display: block; padding: 7px 14px; border-bottom: 3px solid var(--ink); font-size: 13px }
+.sticker span { display: block; padding: 10px 14px; font-family: var(--display); font-size: 18px }
+.signform { width: 100%; max-width: 560px; text-align: left }
+@media (min-width: 900px) {
+  .stage { width: 520px; height: 340px }
+  .stage .blob { left: 70px; top: 70px; width: 380px; height: 260px }
+  .stage .who { left: 165px; top: 40px }
+  .bubble { left: 340px; right: auto; font-size: 26px; padding: 10px 20px }
+  .bubble2 { display: block; position: absolute; left: 360px; top: 74px; width: 230px; text-align: left; background: var(--paper); border: 3px solid var(--ink);
+    border-radius: 8px 26px 26px 26px; box-shadow: 0 5px 0 var(--ink); padding: 12px 16px; font-size: 16px; font-weight: 800; line-height: 1.35 }
+  .signform { background: var(--paper); border: 3px solid var(--ink); border-radius: 28px; box-shadow: 6px 7px 0 var(--ink); padding: 20px 22px }
+  .signform .row { flex-wrap: wrap } .signform .input { flex: 1 1 260px }
+  .shell.out .app { max-width: 1100px }
+}
+@media (min-width: 1240px) { .stickers { display: block } }
+
+/* motion: things rise in when a screen opens, Freebie bobs, buttons lift on hover */
+@keyframes rise { from { opacity: 0; transform: translateY(24px) } to { opacity: 1; transform: none } }
+@keyframes bob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }
+@keyframes pop { from { opacity: 0; transform: scale(.4) } to { opacity: 1; transform: none } }
+@keyframes hopx { from { transform: translateX(-900px) } to { transform: none } }
+@keyframes hopy { 0% { transform: translateY(0) } 16% { transform: translateY(-160px) rotate(-10deg) } 33% { transform: translateY(0) scale(1.08, .9) }
+  50% { transform: translateY(-110px) rotate(-6deg) } 66% { transform: translateY(0) scale(1.06, .92) } 83% { transform: translateY(-50px) } 100% { transform: translateY(0) } }
+@keyframes wave { from { transform: rotate(-14deg) } to { transform: rotate(24deg) } }
+.anim > .stack > *, .anim .feedgrid > * { animation: rise .55s cubic-bezier(.2, .8, .2, 1) both }
+.anim > .stack > *:nth-child(2), .anim .feedgrid > *:nth-child(2) { animation-delay: .08s } .anim > .stack > *:nth-child(3), .anim .feedgrid > *:nth-child(3) { animation-delay: .16s }
+.anim > .stack > *:nth-child(4), .anim .feedgrid > *:nth-child(4) { animation-delay: .24s } .anim > .stack > *:nth-child(5), .anim .feedgrid > *:nth-child(5) { animation-delay: .32s }
+.anim > .stack > *:nth-child(n+6), .anim .feedgrid > *:nth-child(n+6) { animation-delay: .4s }
+.mascot { animation: bob 1.4s ease-in-out infinite }
+.pop { animation: pop .55s cubic-bezier(.3, 1.6, .5, 1) both }
+@media (min-width: 900px) { .hopx { animation: hopx 1.8s cubic-bezier(.3, .6, .4, 1) .2s both } .hopy { animation: hopy 1.8s linear .2s both } .hopx .mascot { animation-delay: 2s } }
+.btn { transition: transform .15s ease } .btn:hover { transform: translateY(-2px) }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important } }
+.stack { display: flex; flex-direction: column; gap: 14px; min-width: 0 }
+.stack > *, .row > * { min-width: 0 }
+.row > .btn, .row > .chip, .row > .avatar, .row > .status { flex: none }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap }
+.between { justify-content: space-between }
+
+.brand { display: flex; align-items: center; gap: 8px; font-family: var(--display); font-size: 18px; line-height: 1 }
+.brand small { display: block; font-family: var(--body); font-size: 12px; font-weight: 800; color: var(--muted); margin-top: 2px }
+.card { background: var(--paper); border: 3px solid var(--ink); border-radius: 24px; box-shadow: 5px 6px 0 var(--ink); padding: 16px;
+  display: flex; flex-direction: column; gap: 8px; min-width: 0; overflow-wrap: anywhere }
+.card.urgent { background: var(--pink-soft); padding: 0; overflow: hidden }
+.card.urgent .band { display: flex; align-items: center; gap: 8px; padding: 9px 16px; background: var(--pink); border-bottom: 3px solid var(--ink); font-size: 14px; font-weight: 800 }
+.card.urgent .inner { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px }
+.chip { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; background: var(--paper); border: 2px solid var(--ink);
+  border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 800; white-space: nowrap }
+.chip.study { background: var(--green-soft) } .chip.opportunity { background: var(--yellow-soft) } .chip.scholarship { background: #E5ECFB }
+.chip.food, .chip.event { background: var(--paper) } .chip.ok { background: var(--green) } .chip.bad { background: #FFC9BD }
+.chip.warn { background: var(--yellow) } .chip.blue { background: var(--blue-soft) }
+.meta { font-size: 15px; color: var(--muted2) }
+.money { font-family: var(--display); font-size: 19px; color: var(--green-ink) }
+.why { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--muted2) }
+
+.btn { min-height: 52px; padding: 0 22px; border: 3px solid var(--ink); border-radius: 999px; background: var(--blue); color: #fff;
+  font-family: var(--display); font-size: 19px; font-weight: 700; box-shadow: 0 5px 0 var(--ink); cursor: pointer; text-decoration: none;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px }
+.btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--ink) }
+.btn.small { min-height: 44px; padding: 0 18px; font-size: 16px; box-shadow: 0 3px 0 var(--ink) }
+.btn.white { background: var(--paper); color: var(--ink) }
+.btn.danger { background: var(--paper); color: var(--red) }
+.btn.block { width: 100% }
+.btn:disabled { opacity: .55; cursor: default; transform: none }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--link); font-weight: 800; font-size: 14px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px }
+
+label.lbl { font-size: 15px; font-weight: 800 }
+.input, select.input, textarea.input { width: 100%; min-height: 54px; border: 3px solid var(--ink); border-radius: 16px; background: var(--paper);
+  padding: 0 16px; font-size: 17px; font-weight: 700 }
+textarea.input { padding: 12px 16px }
+.code { letter-spacing: .5em; text-align: center; font-family: var(--display); font-size: 30px; padding-left: .5em }
+.hint { font-size: 14px; color: var(--muted) }
+.err { color: var(--red); font-size: 15px; font-weight: 800 }
+.note { border: 3px dashed var(--ink); border-radius: 18px; padding: 12px 14px; background: var(--yellow-soft); font-size: 15px }
+.toast { position: fixed; left: 50%; bottom: 100px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 18px;
+  border-radius: 999px; font-weight: 800; z-index: 50; max-width: calc(100vw - 40px); text-align: center }
+
+.tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; max-width: 100% }
+.tabs button { flex: none; min-height: 40px; padding: 0 16px; border: 2px solid var(--ink); border-radius: 999px; background: var(--paper);
+  font-size: 14px; font-weight: 800; cursor: pointer }
+.tabs button[aria-pressed="true"] { background: var(--ink); color: #fff }
+.status { display: flex; align-items: center; gap: 6px; background: var(--paper); border: 2px solid var(--ink); border-radius: 999px; padding: 5px 12px; font-size: 13px; font-weight: 800 }
+.dotgreen { width: 10px; height: 10px; border-radius: 50%; background: #2E9E4F }
+
+.avatar { flex: none; width: 46px; height: 46px; border: 3px solid var(--ink); border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-family: var(--display); font-size: 17px; background: var(--blue-soft) }
+.switch { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-top: 2px dashed var(--line) }
+.switch small { display: block; color: var(--muted); font-size: 13px }
+.switch input { appearance: none; flex: none; width: 52px; height: 30px; border: 3px solid var(--ink); border-radius: 999px; background: #E8E1D3; position: relative; cursor: pointer }
+.switch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--paper); border: 2px solid var(--ink); transition: left .15s }
+.switch input:checked { background: var(--green) } .switch input:checked::after { left: 24px }
+
+.choice { display: flex; flex-wrap: wrap; gap: 8px }
+.choice label { cursor: pointer }
+.choice input { position: absolute; opacity: 0; pointer-events: none }
+.choice span { display: inline-flex; min-height: 42px; align-items: center; padding: 0 14px; border: 2px solid var(--ink); border-radius: 999px; background: var(--paper); font-size: 14px; font-weight: 800 }
+.choice input:checked + span { background: var(--ink); color: #fff }
+.choice input:focus-visible + span { outline: 3px solid var(--link); outline-offset: 2px }
+
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px }
+.stat { background: var(--paper); border: 3px solid var(--ink); border-radius: 18px; padding: 10px; text-align: center }
+.stat b { display: block; font-family: var(--display); font-size: 28px; line-height: 1 }
+.tl { display: flex; gap: 12px; align-items: flex-start }
+.tl .ic { flex: none; width: 38px; height: 38px; border: 2px solid var(--ink); border-radius: 12px; display: flex; align-items: center; justify-content: center; background: var(--blue-soft) }
+.tl .ic.bad { background: #FFC9BD } .tl .ic.ok { background: var(--green) }
+.meter { height: 14px; border: 2px solid var(--ink); border-radius: 999px; background: var(--paper); overflow: hidden }
+.meter i { display: block; height: 100%; background: var(--blue); transition: width .6s ease }
+.meter.trusted i { background: #2E9E4F } .meter.flagged i { background: var(--pink) }
+
+nav.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--navbg); border-top: 3px solid var(--ink);
+  display: flex; justify-content: space-around; padding: 8px max(8px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)) }
+nav.tabbar a { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 60px; min-height: 48px; color: var(--muted); text-decoration: none; font-size: 12px; font-weight: 800 }
+nav.tabbar a span { display: flex; padding: 3px 14px; border-radius: 999px }
+nav.tabbar a[aria-current="page"] { color: var(--link) } nav.tabbar a[aria-current="page"] span { background: var(--blue-soft) }
+
+dialog.sheet { border: 3px solid var(--ink); border-radius: 28px 28px 0 0; padding: 0; margin: auto auto 0; width: min(480px, 100vw); max-width: 100vw;
+  max-height: 88vh; background: var(--ground); color: var(--ink) }
+dialog.sheet::backdrop { background: rgba(30, 26, 22, .45) }
+dialog.sheet .in { padding: 12px 20px calc(24px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 14px }
+.grab { width: 48px; height: 6px; border-radius: 999px; background: var(--ink); margin: 4px auto 0; opacity: .3 }
+.kv { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 2px dashed var(--line); font-size: 15px }
+.kv span:first-child { color: var(--muted); flex: none; max-width: 45% } .kv span:last-child { text-align: right; overflow-wrap: anywhere }
+.never { display: flex; flex-wrap: wrap; gap: 8px }
+.mascot { display: block; margin: 0 auto }
+@media (prefers-reduced-motion: reduce) { .meter i, .switch input::after { transition: none } }
