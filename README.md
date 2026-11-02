@@ -6,7 +6,7 @@
 
 Every student has a personal agent. Agents share free food, paid studies, scholarships and hidden
 opportunities with each other, but only after both students agreed to connect, and only the fields each
-feature needs. It builds on our Track 1 Skill, [Freebie Radar](https://github.com/mrudulaeluri29/aureon/tree/main/freebie-radar):
+feature needs. It builds on our Track 1 Skill, [Freebie Radar](https://github.com/manaswichowdary/freebie-radar/tree/main/freebie-radar):
 Freebie Radar finds things; Student Agents makes sure a find that doesn't fit you reaches a friend it does fit.
 
 ## Why students need this
