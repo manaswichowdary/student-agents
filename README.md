@@ -2,6 +2,8 @@
 
 **Track 2, Agent to Agent Coordination · Team Aureon · Cubbie Hackathon 2026**
 
+**[Try the live demo](https://student-agents.onrender.com)** (sign in with `demo@asu.edu` and code `123456`, then tap **Add Maya, Dev and Sam**.) The free server sleeps when idle, so the first load can take about a minute.
+
 Every student has a personal agent. Agents share free food, paid studies, scholarships and hidden
 opportunities with each other, but only after both students agreed to connect, and only the fields each
 feature needs. It builds on our Track 1 Skill, [Freebie Radar](https://github.com/mrudulaeluri29/aureon/tree/main/freebie-radar):
