@@ -149,8 +149,8 @@ function profileScreen() {
     <div class="row">${freebie("wave", 70)}<h1 style="font-size: 30px">Almost there!</h1></div>
     <p class="muted">Tell your agent a little about you. It only uses this to match finds to you.</p>
     <form id="f" class="stack" novalidate>
-      <label class="lbl" for="name">First and last name</label><input class="input" id="name" autocomplete="name" required>
-      <label class="lbl" for="major">Major</label><input class="input" id="major" placeholder="Psychology" required>
+      <label class="lbl" for="name">First and last name</label><input class="input" id="name" autocomplete="off" required>
+      <label class="lbl" for="major">Major</label><input class="input" id="major" autocomplete="off" placeholder="Psychology" required>
       <label class="lbl" for="year">Year</label>
       <select class="input" id="year"><option value="freshman">Freshman</option><option value="sophomore">Sophomore</option><option value="junior" selected>Junior</option><option value="senior">Senior</option><option value="graduate">Graduate</option></select>
       <p class="hint">Friends see your name, major and year on connection requests.</p>

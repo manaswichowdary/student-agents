@@ -136,7 +136,7 @@ async def auth_check(b: Auth):
     except IdentityError as e:
         fail(e)
     email = normalize(b.email)
-    known = w.identity.in_directory(email) or w.identity.is_verified(email)
+    known = w.identity.in_directory(email)              # only directory students skip the form
     prof = w.identity.profile(email) if known else None
     return {"needs_profile": not known, "profile": prof}
 
@@ -147,7 +147,7 @@ async def auth_verify(b: Auth, request: Request, response: Response):
         w = world()
         email = normalize(b.email)
         try:
-            if w.identity.is_verified(email) and not w.identity.in_directory(email):
+            if not b.name and w.identity.is_verified(email) and not w.identity.in_directory(email):
                 acc = w.identity.account(email)          # returning student: keep their saved profile
                 w.verify(email, b.code, acc["name"], acc["major"], acc["year"])
             else:
