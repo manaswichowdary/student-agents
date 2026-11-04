@@ -94,6 +94,10 @@ class World:
         acc = self.identity.verify(email, code, name, major, year)
         if acc["email"] not in self.agents:
             self._make_agent(acc["email"])
+        else:                       # returning student: use what they just typed, not the old profile
+            a = self.agents[acc["email"]]
+            a.name, a.first = acc["name"], acc["name"].split()[0]
+            a.profile = {**self.identity.profile(acc["email"]), **self.private_profiles.get(acc["email"], {}), **a.settings}
         how = "self reported profile" if acc.get("self_reported") else "name comes from the directory"
         self.event("identity", f"{acc['name']} verified ({acc['email']}), {how}.")
         return acc

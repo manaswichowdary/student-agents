@@ -147,11 +147,8 @@ async def auth_verify(b: Auth, request: Request, response: Response):
         w = world()
         email = normalize(b.email)
         try:
-            if not b.name and w.identity.is_verified(email) and not w.identity.in_directory(email):
-                acc = w.identity.account(email)          # returning student: keep their saved profile
-                w.verify(email, b.code, acc["name"], acc["major"], acc["year"])
-            else:
-                w.verify(email, b.code, b.name, b.major, b.year)
+            # Demo: never reuse a saved profile. Non directory students fill in the form on every sign in.
+            w.verify(email, b.code, b.name, b.major, b.year)
         except IdentityError as e:
             fail(e)
         start_session(response, request, email)
